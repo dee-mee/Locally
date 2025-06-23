@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Reports - Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Reports</h1>
+    </div>
+
+    <div class="row">
+        <!-- Sales Report Card -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Sales Report</div>
+                            <p class="text-muted small">Generate detailed sales reports by date range</p>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                    <a href="{% url 'reports:sales_report' %}" class="stretched-link"></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Report Card -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Inventory Report</div>
+                            <p class="text-muted small">View current inventory status and stock levels</p>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-boxes fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                    <a href="{% url 'reports:inventory_report' %}" class="stretched-link"></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Purchases Report Card -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Purchases Report</div>
+                            <p class="text-muted small">Track purchase orders and supplier information</p>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                    <a href="{% url 'reports:purchases_report' %}" class="stretched-link"></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

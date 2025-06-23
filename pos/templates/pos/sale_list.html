@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sales List - Mini Inventory{% endblock %}
+
+{% block extra_css %}
+<style>
+.card-dark {
+    background: linear-gradient(120deg, #2a266d 60%, #4b33a8 100%);
+    border-radius: 20px;
+    padding: 2.2rem 2.5rem;
+    box-shadow: 0 4px 24px rgba(75,51,168,0.13);
+    color: #fff;
+    margin-bottom: 1.5rem;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.table-dark {
+    width: 100%;
+    color: #fff;
+    border-radius: 10px;
+    background: transparent;
+    font-size: 1.02rem;
+    border-spacing: 0 0.5rem;
+    margin-top: 0.7rem;
+    margin-bottom: 0.5rem;
+}
+.table-dark th, .table-dark td {
+    border: none;
+    padding: 0.7rem 0.5rem;
+}
+.table-dark thead th {
+    color: #ffd700;
+    font-weight: 600;
+    background: none;
+}
+.table-dark tbody tr {
+    border-radius: 10px;
+    background: rgba(255,255,255,0.03);
+    margin-bottom: 0.3rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+    <h4>Sales List</h4>
+    <table class="table-dark">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Date</th>
+          <th>Customer</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sale in sales %}
+        <tr>
+          <td>{{ sale.id }}</td>
+          <td>{{ sale.created_at|date:'Y-m-d H:i' }}</td>
+          <td>{% if sale.customer %}{{ sale.customer.get_full_name|default:sale.customer.company_name|default:sale.customer.name }}{% else %}Walk-in{% endif %}</td>
+          <td>${{ sale.total|floatformat:2 }}</td>
+          <td>{{ sale.status }}</td>
+          <td>
+            <a href="{% url 'pos:sale_detail' sale.id %}" class="btn btn-sm" style="background: #ffd700; color: #2a266d; font-weight:600; border-radius:6px;">View</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center">No sales found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endblock %}

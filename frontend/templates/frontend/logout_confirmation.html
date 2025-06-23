@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Logout - Mini Inventory System{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card-dark" style="box-shadow: 0 4px 24px rgba(75,51,168,0.13); border-radius: 20px;">
+    <div style="border-bottom: 1px solid #3b3470; padding-bottom: 1rem; margin-bottom: 1.2rem;">
+        <h4 class="mb-0" style="color: #ffd700;">Logout</h4>
+    </div>
+    <div>
+        <p class="lead" style="color: #fff;">Are you sure you want to log out?</p>
+        <form method="post" action="{% url 'frontend:logout' %}">
+            {% csrf_token %}
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <a href="{% url 'frontend:dashboard' %}" class="btn" style="background: none; border: 1px solid #ffd700; color: #ffd700; border-radius: 6px; padding: 0.5rem 1.2rem; font-weight: 600;">
+                    <i class="fas fa-arrow-left me-1"></i> Cancel
+                </a>
+                <button type="submit" class="btn" style="background: linear-gradient(120deg, #ffd700 60%, #ffe066 100%); color: #2a266d; font-weight: 700; border: none; border-radius: 6px; padding: 0.5rem 1.2rem;">
+                    <i class="fas fa-sign-out-alt me-1"></i> Logout
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

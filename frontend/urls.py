@@ -13,7 +13,8 @@ urlpatterns = [
         template_name='frontend/registration/login.html',
         redirect_authenticated_user=True
     ), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(next_page='frontend:login'), name='logout'),
+    path('logout/', views.custom_logout, name='logout'),
+    path('logout/confirm/', views.LogoutView.as_view(), name='logout_confirm'),
     
     # Add other frontend URLs here
 ]
