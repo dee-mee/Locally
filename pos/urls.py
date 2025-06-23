@@ -7,7 +7,7 @@ app_name = 'pos'
 
 urlpatterns = [
     # POS Dashboard
-    path('', login_required(views.DashboardView.as_view()), name='dashboard'),
+    path('', login_required(views.DashboardView.as_view()), name='pos_dashboard'),
     
     # Cart Operations
     path('api/cart/add/', login_required(views.add_to_cart), name='add_to_cart'),

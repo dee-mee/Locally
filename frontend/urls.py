@@ -6,7 +6,7 @@ app_name = 'frontend'
 
 urlpatterns = [
     # Dashboard
-    path('', views.dashboard, name='dashboard'),
+    path('', views.dashboard, name='dashboard'),  # This is the main dashboard
     
     # Authentication
     path('login/', auth_views.LoginView.as_view(

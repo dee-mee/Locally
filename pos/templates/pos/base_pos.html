@@ -5,32 +5,32 @@
 
 {% block extra_css %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'css/pos.css' %}">
+<link rel="stylesheet" href="{% static 'pos/css/pos.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="pos-container">
-    <!-- Mobile Toggle Button -->
-    <button class="btn btn-primary d-lg-none position-fixed" id="sidebarToggle" style="z-index: 1001; bottom: 1.5rem; right: 1.5rem; width: 50px; height: 50px; border-radius: 50%;">
-        <i class="bi bi-cart-fill"></i>
-        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartBadge">
-            0
-        </span>
-    </button>
-    
-    <!-- Overlay for mobile -->
-    <div class="overlay" id="sidebarOverlay"></div>
-    
-    <!-- Sidebar -->
-    {% include 'pos/includes/sidebar.html' %}
-    
-    <!-- Main Content -->
-            </div>
-        </div>
+<div class="container-fluid g-0 min-vh-100">
+    <div class="row g-0">
+        <!-- Mobile Toggle Button -->
+        <button class="btn btn-primary d-lg-none position-fixed" id="sidebarToggle" style="z-index: 1001; bottom: 1.5rem; right: 1.5rem; width: 50px; height: 50px; border-radius: 50%;">
+            <i class="bi bi-cart-fill"></i>
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartBadge">
+                0
+            </span>
+        </button>
+        
+        <!-- Overlay for mobile -->
+        <div class="overlay" id="sidebarOverlay"></div>
         
         <!-- Sidebar -->
-        <div class="col-12 col-lg-3 bg-light border-start d-flex flex-column" style="min-height: 100vh;">
+        <div class="col-12 col-lg-3 col-xxl-2 bg-light border-end d-flex flex-column pos-sidebar" id="posSidebar" style="min-height: 100vh;">
             {% include 'pos/includes/sidebar.html' %}
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-12 col-lg-9 col-xxl-10">
+            {% block pos_content %}
+            {% endblock %}
         </div>
     </div>
 </div>
@@ -93,11 +93,6 @@
 
 <!-- Hidden input for tax rate -->
 <input type="hidden" id="taxRate" value="{{ tax_rate|default:'0' }}">
-{% endblock %}
-
-{% block extra_css %}
-{{ block.super }}
-<link href="{% static 'pos/css/pos.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block extra_js %}

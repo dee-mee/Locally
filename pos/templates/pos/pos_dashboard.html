@@ -14,130 +14,137 @@
             <i class="bi bi-upc-scan"></i>
         </button>
     </div>
-</div>
 
-<div class="mb-4">
-    <div class="categories-nav">
-        <button class="category-btn active" data-category="all">All Products</button>
-        {% for category in categories %}
-        <button class="category-btn" data-category="{{ category.id }}">{{ category.name }}</button>
-        {% endfor %}
-    </div>
-</div>
-
-<div class="products-container">
-    <div class="row g-3" id="productsGrid">
-        {% for product in products %}
-        <div class="col-6 col-md-4 col-lg-3 col-xxl-2">
-            <div class="product-card card h-100" 
-                 data-product-id="{{ product.id }}" 
-                 data-category="{% for cat in product.categories.all %}{{ cat.id }} {% endfor %}"
-                 data-barcode="{{ product.barcode|default:'' }}"
-                 data-sku="{{ product.sku|default:'' }}">
-                <div class="position-relative">
-                    <img src="{{ product.image.url|default:'/static/img/default-product.png' }}" 
-                         class="card-img-top product-img" 
-                         alt="{{ product.name }}"
-                         onerror="this.src='/static/img/default-product.png'"
-                         style="height: 140px; object-fit: cover;">
-                    {% if product.on_sale %}
-                    <span class="badge bg-danger position-absolute top-0 end-0 m-2">SALE</span>
-                    {% endif %}
+    <!-- Search Form -->
+    <div class="mb-4">
+        <form method="get" class="row g-2">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control" placeholder="Search products..." value="{{ request.GET.q }}">
+                    <button class="btn btn-outline-secondary" type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
                 </div>
-                <div class="card-body d-flex flex-column">
-                    <h6 class="card-title product-title mb-1">{{ product.name }}</h6>
-                    <div class="mb-2">
-                        <span class="text-primary fw-bold product-price">${{ product.price|floatformat:2 }}</span>
-                        {% if product.compare_at_price and product.compare_at_price > product.price %}
-                        <small class="text-muted text-decoration-line-through ms-1">${{ product.compare_at_price|floatformat:2 }}</small>
+            </div>
+            <div class="col-md-4">
+                <select name="sort" class="form-select" onchange="this.form.submit()">
+                    <option value="name" {% if request.GET.sort == 'name' %}selected{% endif %}>Sort by Name</option>
+                    <option value="price_asc" {% if request.GET.sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+                    <option value="price_desc" {% if request.GET.sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+                    <option value="stock_asc" {% if request.GET.sort == 'stock_asc' %}selected{% endif %}>Stock: Low to High</option>
+                    <option value="stock_desc" {% if request.GET.sort == 'stock_desc' %}selected{% endif %}>Stock: High to Low</option>
+                </select>
+            </div>
+        </form>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="products-container">
+        <div class="row g-3" id="productsGrid">
+            {% for product in products %}
+            <div class="col-6 col-md-4 col-lg-3 col-xxl-2">
+                <div class="product-card card h-100" 
+                     data-product-id="{{ product.id }}"
+                     data-product-name="{{ product.name }}"
+                     data-product-price="{{ product.selling_price|floatformat:2 }}"
+                     data-product-stock="{{ product.stock }}">
+                    <div class="position-relative">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" class="card-img-top product-img" alt="{{ product.name }}">
+                        {% else %}
+                            <div class="product-img bg-light d-flex align-items-center justify-content-center">
+                                <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
+                            </div>
                         {% endif %}
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mt-auto">
-                        <span class="badge bg-{% if product.stock > 0 %}success{% else %}danger{% endif %} product-stock">
+                        <span class="position-absolute top-0 end-0 m-2 badge bg-{% if product.stock > 0 %}success{% else %}danger{% endif %}">
                             {{ product.stock }} in stock
                         </span>
-                        <button class="btn btn-sm btn-outline-primary add-to-cart" {% if product.stock <= 0 %}disabled{% endif %}>
-                            <i class="bi bi-plus-lg"></i>
-                        </button>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title product-title mb-1">{{ product.name }}</h5>
+                        <p class="card-text text-muted small mb-2">{{ product.category.name|default:"Uncategorized" }}</p>
+                        <div class="mt-auto d-flex justify-content-between align-items-center">
+                            <span class="h5 mb-0">${{ product.selling_price|floatformat:2 }}</span>
+                            <button class="btn btn-sm btn-primary add-to-cart" {% if product.stock <= 0 %}disabled{% endif %}>
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        {% empty %}
-        <div class="col-12">
-            <div class="text-center py-5">
-                <i class="bi bi-box-seam display-4 text-muted mb-3"></i>
-                <h5>No products found</h5>
-                <p class="text-muted">Try adjusting your search or add new products.</p>
-                <a href="{% url 'inventory:product_add' %}" class="btn btn-primary">
-                    <i class="bi bi-plus-lg me-1"></i> Add Product
-                </a>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <div class="text-muted">
+                    <i class="bi bi-box-seam display-4 d-block mb-3"></i>
+                    <h4>No products found</h4>
+                    <p class="mb-0">Try adjusting your search or filter criteria</p>
+                </div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-    </div>
-    
-    {% if is_paginated %}
-    <nav class="mt-4" aria-label="Products pagination">
-        <ul class="pagination justify-content-center">
-            {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page=1" aria-label="First">
-                        <span aria-hidden="true">&laquo;&laquo;</span>
-                    </a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
-                        <span aria-hidden="true">&laquo;</span>
-                    </a>
-                </li>
-            {% else %}
-                <li class="page-item disabled">
-                    <span class="page-link">&laquo;&laquo;</span>
-                </li>
-                <li class="page-item disabled">
-                    <span class="page-link">&laquo;</span>
-                </li>
-            {% endif %}
-            
-            {% for num in page_obj.paginator.page_range %}
-                {% if page_obj.number == num %}
-                    <li class="page-item active">
-                        <span class="page-link">{{ num }}</span>
-                    </li>
-                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+
+        {% if is_paginated %}
+        <nav class="mt-4" aria-label="Products pagination">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        <a class="page-link" href="?page=1" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo;&laquo;</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo;</span>
                     </li>
                 {% endif %}
-            {% endfor %}
-            
-            {% if page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
-                        <span aria-hidden="true">&raquo;</span>
-                    </a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
-                        <span aria-hidden="true">&raquo;&raquo;</span>
-                    </a>
-                </li>
-            {% else %}
-                <li class="page-item disabled">
-                    <span class="page-link">&raquo;</span>
-                </li>
-                <li class="page-item disabled">
-                    <span class="page-link">&raquo;&raquo;</span>
-                </li>
-            {% endif %}
-        </ul>
-    </nav>
-    {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&raquo;</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">&raquo;&raquo;</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}
 
-{% block extra_css %}
+{% block extra_js %}
 {{ block.super }}
 <style>
 .categories-nav {
@@ -195,12 +202,14 @@
 .product-title {
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
     min-height: 2.8em;
     font-size: 0.95rem;
     line-height: 1.4;
+    max-height: 3.8em;
 }
 
 .product-stock {
@@ -229,10 +238,7 @@
     }
 }
 </style>
-{% endblock %}
 
-{% block extra_js %}
-{{ block.super }}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize tooltips

@@ -48,8 +48,8 @@ INSTALLED_APPS = [
     # Local apps
     "inventory.apps.InventoryConfig",
     "pos.apps.PosConfig",
-    "reports.apps.ReportsConfig",
     "customers.apps.CustomersConfig",
+    "reports.apps.ReportsConfig",
     "frontend.apps.FrontendConfig",
 ]
 

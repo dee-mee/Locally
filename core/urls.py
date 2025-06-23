@@ -37,6 +37,9 @@ urlpatterns = [
     # Reports app
     path('reports/', include('reports.urls', namespace='reports')),
     
+    # Customers app
+    path('customers/', include('customers.urls', namespace='customers')),
+    
     # Authentication URLs (handled by frontend app)
     path('password_reset/', 
          auth_views.PasswordResetView.as_view(
