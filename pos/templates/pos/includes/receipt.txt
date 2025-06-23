@@ -1,0 +1,61 @@
+{{ store_name|default:"MY STORE" }}
+{{ store_address|default:"123 Store St, City"|linebreaksbr }}
+Tel: {{ store_phone|default:"(123) 456-7890" }} | {{ store_email|default:"info@example.com" }}
+{{ store_website|default:"" }}
+{% if show_tax_identification and tax_identification_number %}Tax ID: {{ tax_identification_number }}{% endif %}
+
+{{ "-" * 32 }}
+
+INVOICE #{{ order.order_number }}
+Date: {{ order.created_at|date:"M d, Y H:i" }}
+{% if show_cashier_name %}Cashier: {{ order.user.get_full_name|default:order.user.username }}
+{% endif %}{% if order.customer %}Customer: {{ order.customer.name }}
+{% if order.customer.phone %}Phone: {{ order.customer.phone }}
+{% endif %}{% endif %}
+
+{{ "-" * 32 }}
+
+{% for item in order.items.all %}
+{{ item.quantity|floatformat:0 }}x {{ item.product.name|truncatechars:30 }}
+    {{ currency }}{{ item.price|floatformat:2 }} = {{ currency }}{{ item.total|floatformat:2 }}
+{% endfor %}
+
+{{ "-" * 32 }}
+
+{% if order.discount_amount > 0 %}
+Subtotal: {{ currency }}{{ order.subtotal|floatformat:2 }}
+Discount: -{{ currency }}{{ order.discount_amount|floatformat:2 }}
+{% endif %}
+{% if order.tax_amount > 0 %}Tax ({{ order.tax_rate|floatformat:2 }}%): {{ currency }}{{ order.tax_amount|floatformat:2 }}
+{% endif %}
+TOTAL: {{ currency }}{{ order.total|floatformat:2 }}
+
+{{ "-" * 32 }}
+
+{% if show_payment_method and payment %}
+Payment: {{ payment.get_payment_method_display }}
+{% if payment.payment_method == 'cash' %}Tendered: {{ currency }}{{ payment.amount_tendered|floatformat:2 }}
+Change: {{ currency }}{{ payment.change_given|floatformat:2 }}
+{% endif %}
+{% endif %}
+
+{{ "-" * 32 }}
+
+{% if show_thank_you_message %}
+{{ thank_you_message|default:"Thank you for your business!" }}
+{% endif %}
+
+{% if show_return_policy %}
+{{ return_policy|default:"Items can be returned within 14 days with receipt." }}
+{% endif %}
+
+{{ "=" * 32 }}
+{{ " " * 10 }}{{ "RECEIPT" }}{{ " " * 10 }}
+{{ "=" * 32 }}
+
+Order #{{ order.order_number }}
+{{ order.completed_at|date:"Y-m-d H:i:s" }}
+
+{% if barcode %}
+{{ barcode }}
+{% endif %}

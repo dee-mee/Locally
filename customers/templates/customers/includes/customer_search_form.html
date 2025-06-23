@@ -1,0 +1,397 @@
+{% load static %}
+
+<div class="customer-search-widget">
+    <div class="input-group mb-3">
+        <span class="input-group-text bg-light border-end-0">
+            <i class="bi bi-search"></i>
+        </span>
+        <input type="text" 
+               class="form-control customer-search-input" 
+               placeholder="Search customers by name, email, or phone..."
+               autocomplete="off"
+               data-url="{% url 'customers:customer_search' %}">
+        <button class="btn btn-outline-secondary customer-clear-search d-none" type="button">
+            <i class="bi bi-x-lg"></i>
+        </button>
+        <button class="btn btn-outline-primary customer-new" type="button" data-bs-toggle="modal" data-bs-target="#newCustomerModal">
+            <i class="bi bi-plus-lg"></i> New
+        </button>
+    </div>
+    
+    <div class="customer-search-results card d-none">
+        <div class="card-body p-0">
+            <div class="list-group list-group-flush" id="customerSearchResults">
+                <!-- Results will be loaded here via AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Customer Modal -->
+<div class="modal fade" id="newCustomerModal" tabindex="-1" aria-labelledby="newCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newCustomerModalLabel">Add New Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="quickCustomerForm" method="post" action="{% url 'customers:customer_quick_add' %}">
+                <div class="modal-body">
+                    <div class="alert alert-info small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Fill in the basic details now. You can add more information later.
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="id_first_name" class="form-label">First Name *</label>
+                            <input type="text" class="form-control" id="id_first_name" name="first_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_last_name" class="form-label">Last Name *</label>
+                            <input type="text" class="form-control" id="id_last_name" name="last_name" required>
+                        </div>
+                        <div class="col-12">
+                            <label for="id_email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="id_email" name="email">
+                        </div>
+                        <div class="col-12">
+                            <label for="id_phone" class="form-label">Phone</label>
+                            <input type="tel" class="form-control" id="id_phone" name="phone">
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="id_is_active" name="is_active" checked>
+                                <label class="form-check-label" for="id_is_active">
+                                    Active
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        Save Customer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Selected Template (hidden by default) -->
+<template id="customerSelectedTemplate">
+    <div class="customer-selected p-3 border rounded bg-light">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="mb-1 customer-name"></h6>
+                <div class="customer-details small text-muted"></div>
+            </div>
+            <div>
+                <button type="button" class="btn btn-sm btn-outline-secondary customer-change">
+                    <i class="bi bi-pencil"></i> Change
+                </button>
+                <input type="hidden" name="customer" class="customer-id">
+            </div>
+        </div>
+    </div>
+</template>
+
+{% block extra_css %}
+<style>
+.customer-search-widget {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.customer-search-results {
+    position: absolute;
+    width: 100%;
+    z-index: 1050;
+    max-height: 400px;
+    overflow-y: auto;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 0.375rem;
+    margin-top: 0.25rem;
+}
+
+.customer-search-results .list-group-item {
+    border-left: 0;
+    border-right: 0;
+    padding: 0.75rem 1.25rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.customer-search-results .list-group-item:first-child {
+    border-top: 0;
+}
+
+.customer-search-results .list-group-item:last-child {
+    border-bottom: 0;
+}
+
+.customer-search-results .list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+.customer-selected {
+    margin-bottom: 1rem;
+}
+
+/* Animation for search results */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.customer-search-results {
+    animation: fadeIn 0.15s ease-out;
+}
+
+/* Loading indicator */
+.loading .input-group-text::after {
+    content: '';
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 0.75s linear infinite;
+    margin-left: 0.5em;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchWidget = document.querySelector('.customer-search-widget');
+    const searchInput = searchWidget.querySelector('.customer-search-input');
+    const searchResults = searchWidget.querySelector('.customer-search-results');
+    const searchResultsContainer = searchWidget.querySelector('#customerSearchResults');
+    const clearButton = searchWidget.querySelector('.customer-clear-search');
+    const newCustomerButton = searchWidget.querySelector('.customer-new');
+    const quickCustomerForm = document.getElementById('quickCustomerForm');
+    
+    let searchTimeout;
+    let selectedCustomerId = null;
+    
+    // Debounce search input
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const query = this.value.trim();
+        
+        if (query.length === 0) {
+            clearSearch();
+            return;
+        }
+        
+        if (query.length < 2) {
+            return;
+        }
+        
+        searchWidget.classList.add('loading');
+        clearButton.classList.remove('d-none');
+        
+        searchTimeout = setTimeout(() => {
+            performSearch(query);
+        }, 300);
+    });
+    
+    // Handle clear button click
+    clearButton.addEventListener('click', function() {
+        searchInput.value = '';
+        clearSearch();
+        searchInput.focus();
+    });
+    
+    // Close search results when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!searchWidget.contains(e.target)) {
+            searchResults.classList.add('d-none');
+        }
+    });
+    
+    // Handle quick customer form submission
+    if (quickCustomerForm) {
+        quickCustomerForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const submitButton = this.querySelector('button[type="submit"]');
+            const spinner = submitButton.querySelector('.spinner-border');
+            
+            submitButton.disabled = true;
+            spinner.classList.remove('d-none');
+            
+            const formData = new FormData(this);
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Close the modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('newCustomerModal'));
+                    modal.hide();
+                    
+                    // Reset form
+                    this.reset();
+                    
+                    // Select the newly created customer
+                    selectCustomer({
+                        id: data.customer.id,
+                        name: data.customer.name,
+                        email: data.customer.email || '',
+                        phone: data.customer.phone || ''
+                    });
+                    
+                    // Show success message
+                    showAlert('Customer added successfully!', 'success');
+                } else {
+                    // Show error message
+                    showAlert(data.message || 'An error occurred. Please try again.', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('An error occurred. Please try again.', 'danger');
+            })
+            .finally(() => {
+                submitButton.disabled = false;
+                spinner.classList.add('d-none');
+            });
+        });
+    }
+    
+    // Helper function to perform search
+    function performSearch(query) {
+        const url = searchInput.dataset.url + '?q=' + encodeURIComponent(query);
+        
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            searchResultsContainer.innerHTML = html;
+            searchResults.classList.remove('d-none');
+            searchWidget.classList.remove('loading');
+            
+            // Add click handlers to search results
+            const resultItems = searchResultsContainer.querySelectorAll('.customer-select');
+            resultItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    selectCustomer({
+                        id: this.dataset.customerId,
+                        name: this.dataset.customerName,
+                        email: this.dataset.customerEmail || '',
+                        phone: this.dataset.customerPhone || '',
+                        company: this.dataset.customerCompany || ''
+                    });
+                    
+                    searchResults.classList.add('d-none');
+                    searchInput.value = '';
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            searchWidget.classList.remove('loading');
+            searchResultsContainer.innerHTML = `
+                <div class="p-3 text-center text-danger">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    An error occurred while searching. Please try again.
+                </div>
+            `;
+            searchResults.classList.remove('d-none');
+        });
+    }
+    
+    // Helper function to clear search
+    function clearSearch() {
+        searchResults.classList.add('d-none');
+        clearButton.classList.add('d-none');
+        searchWidget.classList.remove('loading');
+        searchResultsContainer.innerHTML = '';
+    }
+    
+    // Helper function to select a customer
+    function selectCustomer(customer) {
+        selectedCustomerId = customer.id;
+        
+        // Create or update the selected customer display
+        let selectedDisplay = searchWidget.querySelector('.customer-selected');
+        
+        if (!selectedDisplay) {
+            const template = document.getElementById('customerSelectedTemplate');
+            selectedDisplay = template.content.cloneNode(true).querySelector('.customer-selected');
+            searchWidget.insertBefore(selectedDisplay, searchResults);
+            
+            // Add click handler for change button
+            selectedDisplay.querySelector('.customer-change').addEventListener('click', function() {
+                selectedDisplay.remove();
+                selectedCustomerId = null;
+                searchInput.focus();
+            });
+        }
+        
+        // Update the display
+        selectedDisplay.querySelector('.customer-name').textContent = customer.name;
+        selectedDisplay.querySelector('.customer-id').value = customer.id;
+        
+        // Build details string
+        let details = [];
+        if (customer.email) details.push(customer.email);
+        if (customer.phone) details.push(customer.phone);
+        if (customer.company) details.push(customer.company);
+        
+        selectedDisplay.querySelector('.customer-details').textContent = details.join(' • ');
+        
+        // Trigger a custom event that other components can listen for
+        const event = new CustomEvent('customerSelected', {
+            detail: {
+                id: customer.id,
+                name: customer.name,
+                email: customer.email,
+                phone: customer.phone,
+                company: customer.company
+            }
+        });
+        document.dispatchEvent(event);
+    }
+    
+    // Helper function to show alerts
+    function showAlert(message, type = 'info') {
+        // This would be implemented based on your alert system
+        console.log(`[${type}] ${message}`);
+        // Example: Show a toast notification
+        // showToast(message, type);
+    }
+    
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

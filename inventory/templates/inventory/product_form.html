@@ -1,0 +1,332 @@
+{% extends 'inventory/base.html' %}
+{% load static crispy_forms_tags %}
+
+{% block page_title %}
+    {% if form.instance.pk %}Edit{% else %}Add New{% endif %} Product
+{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'inventory:product_list' %}">Products</a></li>
+<li class="breadcrumb-item active" aria-current="page">
+    {% if form.instance.pk %}{{ form.instance.name }}{% else %}New Product{% endif %}
+</li>
+{% endblock %}
+
+{% block page_actions %}
+<button type="submit" form="productForm" class="btn btn-primary">
+    <i class="fas fa-save me-1"></i> Save
+</button>
+<a href="{% if form.instance.pk %}{% url 'inventory:product_detail' form.instance.pk %}{% else %}{% url 'inventory:product_list' %}{% endif %}" 
+   class="btn btn-outline-secondary">
+    <i class="fas fa-times me-1"></i> Cancel
+</a>
+{% endblock %}
+
+{% block page_content %}
+<div class="row
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Product Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" id="productForm">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            {{ form.name|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.status|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.sku|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.barcode|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.category|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.unit|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.cost_price|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.selling_price|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.taxable|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.tax_rate|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.track_inventory|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6" id="reorderLevelField">
+                            {{ form.reorder_level|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    {{ form.description|as_crispy_field }}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Product Image</label>
+                        <div class="custom-file">
+                            <input type="file" name="image" class="custom-file-input" id="id_image" 
+                                   accept="image/*" onchange="previewImage(this, 'imagePreview')">
+                            <label class="custom-file-label" for="id_image">
+                                {% if form.instance.image %}{{ form.instance.image.name|slice:":30" }}{% else %}Choose file...{% endif %}
+                            </label>
+                        </div>
+                        <small class="form-text text-muted">
+                            Recommended size: 800x800px. Max size: 2MB. Allowed formats: JPG, PNG, GIF.
+                        </small>
+                        {% if form.image.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.image.errors }}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mt-2 text-center">
+                            {% if form.instance.image %}
+                                <img id="imagePreview" src="{{ form.instance.image.url }}" 
+                                     class="img-fluid rounded border" style="max-height: 200px;">
+                            {% else %}
+                                <img id="imagePreview" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" 
+                                     class="img-fluid rounded border d-none" style="max-height: 200px;">
+                                <div id="noImagePreview" class="bg-light rounded d-flex align-items-center justify-content-center mt-2" 
+                                     style="height: 150px;">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-image fa-3x mb-2 d-block"></i>
+                                        <span>No image selected</span>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        {% if form.instance.image %}
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" name="image-clear" id="image-clear">
+                            <label class="form-check-label" for="image-clear">
+                                Remove current image
+                            </label>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Save Product
+                        </button>
+                        <a href="{% if form.instance.pk %}{% url 'inventory:product_detail' form.instance.pk %}{% else %}{% url 'inventory:product_list' %}{% endif %}" 
+                           class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Additional Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="text-muted mb-3">Inventory Tracking</h6>
+                    <div class="form-check form-switch mb-2">
+                        {{ form.alert_low_stock|as_crispy_field }}
+                    </div>
+                    <div class="form-check form-switch mb-2">
+                        {{ form.allow_backorder|as_crispy_field }}
+                    </div>
+                    <div class="form-check form-switch">
+                        {{ form.is_active|as_crispy_field }}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="text-muted mb-3">Product Organization</h6>
+                    {{ form.brand|as_crispy_field }}
+                    {{ form.supplier|as_crispy_field }}
+                    {{ form.tags|as_crispy_field }}
+                </div>
+                
+                <div class="mb-0">
+                    <h6 class="text-muted mb-3">Shipping</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.weight|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.weight_unit|as_crispy_field }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            {{ form.length|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.width|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.height|as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% if form.instance.pk %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Product Stats</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="d-flex justify-content-between py-2 border-bottom">
+                        <span>Created</span>
+                        <span class="text-muted">{{ form.instance.created_at|date:"M d, Y" }}</span>
+                    </li>
+                    <li class="d-flex justify-content-between py-2 border-bottom">
+                        <span>Last Updated</span>
+                        <span class="text-muted">
+                            {% if form.instance.updated_at %}
+                                {{ form.instance.updated_at|timesince }} ago
+                            {% else %}
+                                Never
+                            {% endif %}
+                        </span>
+                    </li>
+                    <li class="d-flex justify-content-between py-2 border-bottom">
+                        <span>Created By</span>
+                        <span class="text-muted">
+                            {{ form.instance.created_by.get_full_name|default:form.instance.created_by.username }}
+                        </span>
+                    </li>
+                    <li class="d-flex justify-content-between py-2">
+                        <span>Total Stock Value</span>
+                        <span class="fw-medium">${{ form.instance.total_value|default:0|floatformat:2 }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+// Preview image before upload
+function previewImage(input, previewId) {
+    const preview = document.getElementById(previewId);
+    const noPreview = document.getElementById('noImagePreview');
+    const fileLabel = document.querySelector('.custom-file-label');
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            if (preview) {
+                preview.src = e.target.result;
+                preview.classList.remove('d-none');
+                if (noPreview) noPreview.classList.add('d-none');
+            }
+        }
+        
+        reader.readAsDataURL(input.files[0]);
+        fileLabel.textContent = input.files[0].name;
+    } else {
+        if (preview) {
+            preview.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+            preview.classList.add('d-none');
+            if (noPreview) noPreview.classList.remove('d-none');
+        }
+        fileLabel.textContent = 'Choose file...';
+    }
+}
+
+// Toggle reorder level field based on track inventory
+const trackInventory = document.getElementById('id_track_inventory');
+const reorderLevelField = document.getElementById('reorderLevelField');
+
+function toggleReorderLevel() {
+    if (trackInventory.checked) {
+        reorderLevelField.style.display = 'block';
+    } else {
+        reorderLevelField.style.display = 'none';
+    }
+}
+
+// Initialize
+if (trackInventory) {
+    trackInventory.addEventListener('change', toggleReorderLevel);
+    toggleReorderLevel(); // Initial check
+}
+
+// Handle image clear checkbox
+const clearCheckbox = document.getElementById('image-clear');
+const imageInput = document.getElementById('id_image');
+const imagePreview = document.getElementById('imagePreview');
+const noPreview = document.getElementById('noImagePreview');
+const fileLabel = document.querySelector('.custom-file-label');
+
+if (clearCheckbox) {
+    clearCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            if (imagePreview) {
+                imagePreview.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+                imagePreview.classList.add('d-none');
+                if (noPreview) noPreview.classList.remove('d-none');
+            }
+            if (imageInput) {
+                imageInput.value = '';
+                fileLabel.textContent = 'Choose file...';
+            }
+        }
+    });
+}
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Initialize select2 for tags if available
+    if ($ && $.fn.select2) {
+        $('#id_tags').select2({
+            tags: true,
+            tokenSeparators: [',', ' '],
+            placeholder: 'Add tags...',
+            width: '100%'
+        });
+    }
+});
+</script>
+{% endblock %}

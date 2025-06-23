@@ -1,0 +1,82 @@
+{% extends 'customers/base_customers.html' %}
+
+{% block page_title %}Delete Customer{% endblock %}
+
+{% block header %}
+    <div class="d-flex align-items-center">
+        <a href="{% url 'customers:customer_detail' customer.pk %}" class="text-decoration-none me-3">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <h1 class="h4 mb-0">Delete Customer</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{% url 'customers:customer_list' %}">Customers</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'customers:customer_detail' customer.pk %}">{{ customer.get_short_name }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Delete</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+{% endblock %}
+
+{% block customer_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    <div class="avatar-xxl mx-auto mb-3">
+                        <div class="avatar-title rounded-circle bg-soft-danger text-danger d-flex align-items-center justify-content-center" 
+                             style="width: 100px; height: 100px; font-size: 2.5rem;">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                        </div>
+                    </div>
+                    <h3>Are you sure?</h3>
+                    <p class="text-muted">
+                        You are about to permanently delete <strong>{{ customer.get_full_name }}</strong> and all associated data.
+                        This action cannot be undone.
+                    </p>
+                    
+                    <div class="alert alert-warning text-start">
+                        <h5 class="alert-heading">This will delete:</h5>
+                        <ul class="mb-0">
+                            <li>Customer profile and contact information</li>
+                            <li>All related sales history</li>
+                            <li>Any associated notes or files</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger me-2">
+                                <i class="bi bi-trash me-1"></i> Yes, Delete Customer
+                            </button>
+                        </form>
+                        <a href="{% url 'customers:customer_detail' customer.pk %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-lg me-1"></i> Cancel
+                        </a>
+                    </div>
+                    
+                    <div class="mt-4 text-muted small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Note: If you want to keep the customer's transaction history but mark them as inactive, 
+                        <a href="{% url 'customers:customer_edit' customer.pk %}">edit the customer</a> instead.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.avatar-xxl {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto;
+}
+</style>
+{% endblock %}

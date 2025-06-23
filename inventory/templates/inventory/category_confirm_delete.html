@@ -1,0 +1,194 @@
+{% extends 'inventory/base.html' %}
+
+{% block page_title %}Delete Category: {{ category.name }}{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'inventory:category_list' %}">Categories</a></li>
+<li class="breadcrumb-item"><a href="{% url 'inventory:category_detail' category.slug %}">{{ category.name }}</a></li>
+<li class="breadcrumb-item active" aria-current="page">Delete</li>
+{% endblock %}
+
+{% block page_content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Deletion
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <div class="mb-3">
+                        <i class="fas fa-trash-alt fa-4x text-danger"></i>
+                    </div>
+                    <h4>Are you sure you want to delete this category?</h4>
+                    <p class="text-muted">
+                        This action cannot be undone. All products in this category will be moved to the default category.
+                    </p>
+                </div>
+                
+                <div class="card border-danger mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ category.name }}</h5>
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <span class="text-muted">Products:</span>
+                                <span class="ms-2 fw-medium">{{ category.products.count }}</span>
+                            </div>
+                            <div>
+                                <span class="text-muted">Status:</span>
+                                <span class="ms-2 badge {% if category.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {% if category.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        {% if category.description %}
+                        <div class="mt-2">
+                            <p class="mb-0 small text-muted">{{ category.description|truncatechars:100 }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if category.products.exists %}
+                <div class="alert alert-warning">
+                    <div class="d-flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                        </div>
+                        <div>
+                            <h6 class="alert-heading">Important Note</h6>
+                            <p class="mb-0">
+                                This category contains <strong>{{ category.products.count }} product{{ category.products.count|pluralize }}</strong>. 
+                                Deleting this category will move all products to the default category.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    
+                    <div class="form-group mb-3">
+                        <label for="id_default_category" class="form-label">
+                            Move products to category:
+                        </label>
+                        <select name="default_category" id="id_default_category" class="form-select">
+                            {% for cat in default_categories %}
+                                {% if cat.id != category.id %}
+                                <option value="{{ cat.id }}" {% if forloop.first and not category.default_category_id or category.default_category_id == cat.id %}selected{% endif %}>
+                                    {{ cat.name }}
+                                </option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">
+                            Select a category to move all products to before deletion.
+                        </div>
+                    </div>
+                    
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" name="confirm_delete" id="confirm_delete" required>
+                        <label class="form-check-label" for="confirm_delete">
+                            I understand that this action cannot be undone.
+                        </label>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'inventory:category_detail' category.slug %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt me-1"></i> Delete Category
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        {% if category.products.exists %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Products in this Category ({{ category.products.count }})</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for product in category.products.all|slice:":5" %}
+                    <div class="list-group-item">
+                        <div class="d-flex align-items-center">
+                            {% if product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}" 
+                                 class="rounded me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                            {% else %}
+                            <div class="bg-light rounded d-flex align-items-center justify-content-center me-3" 
+                                 style="width: 40px; height: 40px;">
+                                <i class="fas fa-box text-muted"></i>
+                            </div>
+                            {% endif %}
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0">{{ product.name }}</h6>
+                                <small class="text-muted">
+                                    SKU: {{ product.sku|default:"N/A" }} | 
+                                    Stock: {{ product.stock_quantity|default:0 }}
+                                </small>
+                            </div>
+                            <span class="badge {% if product.stock_quantity > 0 %}bg-success{% else %}bg-danger{% endif %} rounded-pill">
+                                ${{ product.selling_price|default:0|floatformat:2 }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    {% if category.products.count > 5 %}
+                    <div class="text-center py-2">
+                        <a href="{% url 'inventory:product_list' %}?category={{ category.slug }}" 
+                           class="btn btn-sm btn-outline-primary">
+                            View All {{ category.products.count }} Products
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Disable form submission if confirm checkbox is not checked
+        const form = document.querySelector('form');
+        const confirmCheckbox = document.getElementById('confirm_delete');
+        
+        if (form && confirmCheckbox) {
+            form.addEventListener('submit', function(e) {
+                if (!confirmCheckbox.checked) {
+                    e.preventDefault();
+                    alert('Please confirm that you understand this action cannot be undone.');
+                    return false;
+                }
+                
+                // Add loading state to the delete button
+                const deleteBtn = form.querySelector('button[type="submit"]');
+                if (deleteBtn) {
+                    deleteBtn.disabled = true;
+                    deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Deleting...';
+                }
+                
+                return true;
+            });
+        }
+        
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+{% endblock %}

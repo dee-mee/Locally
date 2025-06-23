@@ -1,0 +1,435 @@
+{% extends 'customers/base_customers.html' %}
+{% load static humanize %}
+
+{% block page_title %}{{ customer.get_full_name }}{% endblock %}
+
+{% block header %}
+    <div class="d-flex align-items-center">
+        <a href="{% url 'customers:customer_list' %}" class="text-decoration-none me-3">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <h1 class="h4 mb-0">{{ customer.get_full_name }}</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{% url 'customers:customer_list' %}">Customers</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ customer.get_short_name }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+{% endblock %}
+
+{% block header_buttons %}
+    <div class="btn-group">
+        <a href="{% url 'customers:customer_edit' customer.pk %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-pencil me-1"></i> Edit
+        </a>
+        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+            <i class="bi bi-trash me-1"></i> Delete
+        </button>
+    </div>
+{% endblock %}
+
+{% block customer_content %}
+<div class="row">
+    <!-- Customer Information -->
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <div class="avatar-xxl">
+                        <div class="avatar-title rounded-circle bg-light border border-2 border-primary text-primary d-flex align-items-center justify-content-center" 
+                             style="width: 120px; height: 120px; font-size: 3rem;">
+                            {{ customer.first_name|first|upper }}{{ customer.last_name|first|upper }}
+                        </div>
+                    </div>
+                </div>
+                <h3 class="card-title mb-1">{{ customer.get_full_name }}</h3>
+                {% if customer.company_name %}
+                    <p class="text-muted mb-2">{{ customer.company_name }}</p>
+                {% endif %}
+                <span class="badge bg-{{ customer.is_active|yesno:'success,secondary' }} mb-3">
+                    {{ customer.is_active|yesno:"Active,Inactive" }}
+                </span>
+                
+                <div class="d-flex justify-content-center gap-2 mb-3">
+                    {% if customer.email %}
+                    <a href="mailto:{{ customer.email }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-envelope me-1"></i> Email
+                    </a>
+                    {% endif %}
+                    {% if customer.phone %}
+                    <a href="tel:{{ customer.phone }}" class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-telephone me-1"></i> Call
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <div class="d-flex justify-content-center gap-2">
+                    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#sendSmsModal">
+                        <i class="bi bi-chat-dots me-1"></i> SMS
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-printer me-1"></i> Print
+                    </button>
+                </div>
+            </div>
+            
+            <ul class="list-group list-group-flush">
+                {% if customer.customer_type %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>Type</span>
+                    <span class="badge bg-info">{{ customer.get_customer_type_display }}</span>
+                </li>
+                {% endif %}
+                
+                {% if customer.tax_number %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>Tax ID</span>
+                    <span>{{ customer.tax_number }}</span>
+                </li>
+                {% endif %}
+                
+                {% if customer.created_at %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>Member Since</span>
+                    <span>{{ customer.created_at|date:"M d, Y" }}</span>
+                </li>
+                {% endif %}
+                
+                {% if customer.total_orders %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>Total Orders</span>
+                    <span class="badge bg-primary rounded-pill">{{ customer.total_orders }}</span>
+                </li>
+                {% endif %}
+                
+                {% if customer.total_purchases %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>Total Spent</span>
+                    <span class="fw-bold">${{ customer.total_purchases|floatformat:2|intcomma }}</span>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+        
+        <!-- Contact Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-person-lines-fill me-2"></i>Contact Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    {% if customer.email %}
+                    <li class="mb-2">
+                        <i class="bi bi-envelope me-2 text-muted"></i>
+                        <a href="mailto:{{ customer.email }}" class="text-decoration-none">
+                            {{ customer.email }}
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% if customer.phone %}
+                    <li class="mb-2">
+                        <i class="bi bi-telephone me-2 text-muted"></i>
+                        <a href="tel:{{ customer.phone }}" class="text-decoration-none">
+                            {{ customer.phone }}
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Address -->
+        {% if customer.address or customer.city or customer.state or customer.postal_code or customer.country %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-geo-alt me-2"></i>Address
+                </h5>
+            </div>
+            <div class="card-body">
+                <address class="mb-0">
+                    {% if customer.address %}{{ customer.address }}<br>{% endif %}
+                    {% if customer.city %}{{ customer.city }}, {% endif %}
+                    {% if customer.state %}{{ customer.state }} {% endif %}
+                    {% if customer.postal_code %}{{ customer.postal_code }}{% endif %}<br>
+                    {% if customer.country %}{{ customer.country }}{% endif %}
+                </address>
+                <div class="mt-3">
+                    <a href="https://maps.google.com/?q={{ customer.address|urlencode }}+{{ customer.city|urlencode }}+{{ customer.state|urlencode }}+{{ customer.postal_code|urlencode }}" 
+                       target="_blank" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-map me-1"></i> View on Map
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Right Column -->
+    <div class="col-lg-8">
+        <!-- Notes -->
+        {% if customer.notes %}
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-journal-text me-2"></i>Notes
+                </h5>
+                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editNotesModal">
+                    <i class="bi bi-pencil"></i>
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="customer-notes">
+                    {{ customer.notes|linebreaksbr|urlize }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Recent Activity -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-activity me-2"></i>Recent Activity
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_transactions %}
+                    <div class="timeline">
+                        {% for transaction in recent_transactions %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <div class="d-flex justify-content-between">
+                                    <h6 class="mb-1">{{ transaction.get_type_display }}</h6>
+                                    <small class="text-muted">{{ transaction.date|timesince }} ago</small>
+                                </div>
+                                <p class="mb-1">{{ transaction.description|truncatewords:20 }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        {% if transaction.amount %}
+                                            ${{ transaction.amount|floatformat:2 }}
+                                        {% endif %}
+                                    </small>
+                                    <a href="#" class="btn btn-sm btn-outline-primary btn-sm">View</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <div class="mb-3">
+                            <i class="bi bi-activity fs-1 text-muted"></i>
+                        </div>
+                        <p class="text-muted">No recent activity found for this customer.</p>
+                        <button class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-lg me-1"></i> Add Transaction
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Customer Stats -->
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="card-title mb-0">Order History</h6>
+                            <span class="badge bg-primary rounded-pill">12</span>
+                        </div>
+                        <div class="progress mb-2" style="height: 10px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 75%;" 
+                                 aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>Completed: 9</span>
+                            <span>Pending: 2</span>
+                            <span>Canceled: 1</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h6 class="card-title">Lifetime Value</h6>
+                        <h3 class="mb-3">${{ customer.total_purchases|default:0|floatformat:2|intcomma }}</h3>
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>Avg. Order: ${{ customer.total_purchases|default:0|floatformat:2|intcomma }}</span>
+                            <span>Orders: {{ customer.total_orders }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong>{{ customer.get_full_name }}</strong>?</p>
+                <p class="text-danger">This action cannot be undone. All associated data will be permanently removed.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{% url 'customers:customer_delete' customer.pk %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete Customer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Notes Modal -->
+<div class="modal fade" id="editNotesModal" tabindex="-1" aria-labelledby="editNotesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'customers:customer_edit' customer.pk %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editNotesModalLabel">Edit Notes</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="8">{{ customer.notes|default:'' }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Send SMS Modal -->
+<div class="modal fade" id="sendSmsModal" tabindex="-1" aria-labelledby="sendSmsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="sendSmsModalLabel">Send SMS</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="phoneNumber" class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control" id="phoneNumber" value="{{ customer.phone|default:'' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="messageText" class="form-label">Message</label>
+                        <textarea class="form-control" id="messageText" rows="5" placeholder="Type your message here..."></textarea>
+                        <div class="form-text">
+                            <span id="charCount">0</span>/160 characters
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send me-1"></i> Send Message
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% if not customer.notes %}
+<!-- Add Notes Button (Floating) -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <button class="btn btn-primary rounded-pill shadow" data-bs-toggle="modal" data-bs-target="#editNotesModal">
+        <i class="bi bi-plus-lg me-1"></i> Add Notes
+    </button>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.avatar-xxl {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto;
+}
+
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+    margin: 0 0 0 1rem;
+    border-left: 2px solid #e9ecef;
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 1.5rem;
+}
+
+.timeline-item:last-child {
+    padding-bottom: 0;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -1.5rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background-color: #0d6efd;
+    top: 0.25rem;
+}
+
+.timeline-content {
+    padding: 0.5rem 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.375rem;
+}
+
+.customer-notes {
+    white-space: pre-line;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Character counter for SMS
+    const messageText = document.getElementById('messageText');
+    const charCount = document.getElementById('charCount');
+    
+    if (messageText && charCount) {
+        messageText.addEventListener('input', function() {
+            charCount.textContent = this.value.length;
+        });
+    }
+    
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

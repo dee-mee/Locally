@@ -1,0 +1,655 @@
+{% extends 'inventory/base.html' %}
+{% load static %}
+
+{% block page_title %}Products{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active" aria-current="page">Products</li>
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fas fa-plus me-1"></i> Add Product
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end">
+        <li>
+            <a class="dropdown-item" href="{% url 'inventory:product_add' %}">
+                <i class="fas fa-box me-2"></i>Single Product
+            </a>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+            <a class="dropdown-item" href="{% url 'inventory:import_products' %}">
+                <i class="fas fa-file-import me-2"></i>Import from File
+            </a>
+        </li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block page_content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Filter Products</h5>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" 
+                        data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+                    <i class="fas fa-sliders-h me-1"></i> Filters
+                </button>
+            </div>
+            <div class="collapse {% if filter_form.has_changed %}show{% endif %}" id="filterCollapse">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="id_search" class="form-label">Search</label>
+                            <input type="text" name="search" class="form-control" id="id_search" 
+                                   value="{{ request.GET.search }}" placeholder="Name, SKU, or Barcode">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="id_category" class="form-label">Category</label>
+                            <select name="category" id="id_category" class="form-select">
+                                <option value="">All Categories</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}" 
+                                    {% if request.GET.category == cat.id|stringformat:'s' %}selected{% endif %}>
+                                    {{ cat.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="id_status" class="form-label">Status</label>
+                            <select name="status" id="id_status" class="form-select">
+                                <option value="">All Statuses</option>
+                                <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                                <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="id_stock_status" class="form-label">Stock Status</label>
+                            <select name="stock_status" id="id_stock_status" class="form-select">
+                                <option value="">All</option>
+                                <option value="in_stock" {% if request.GET.stock_status == 'in_stock' %}selected{% endif %}>In Stock</option>
+                                <option value="low_stock" {% if request.GET.stock_status == 'low_stock' %}selected{% endif %}>Low Stock</option>
+                                <option value="out_of_stock" {% if request.GET.stock_status == 'out_of_stock' %}selected{% endif %}>Out of Stock</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter me-1"></i> Apply
+                            </button>
+                        </div>
+                        {% if request.GET %}
+                        <div class="col-12">
+                            <a href="?" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i> Clear Filters
+                            </a>
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    Products
+                    {% if filter_form.has_changed %}
+                    <span class="badge bg-primary ms-2">{{ page_obj.paginator.count }} found</span>
+                    {% endif %}
+                </h5>
+                <div class="d-flex">
+                    <div class="dropdown me-2">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                                id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-download me-1"></i> Export
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                            <li>
+                                <a class="dropdown-item" href="?{{ request.GET.urlencode }}&export=csv">
+                                    <i class="fas fa-file-csv text-primary me-2"></i>CSV
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="?{{ request.GET.urlencode }}&export=excel">
+                                    <i class="fas fa-file-excel text-success me-2"></i>Excel
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="?{{ request.GET.urlencode }}&export=pdf">
+                                    <i class="fas fa-file-pdf text-danger me-2"></i>PDF
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" 
+                                data-bs-target="#bulkActionsModal">
+                            <i class="fas fa-tasks me-1"></i> Bulk Actions
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown" 
+                                aria-expanded="false">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="#" data-bs-toggle="modal" 
+                                   data-bs-target="#importModal">
+                                    <i class="fas fa-file-import me-2"></i>Import Products
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'inventory:product_add' %}">
+                                    <i class="fas fa-plus me-2"></i>Add New Product
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-body p-0">
+                {% if products %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="40">
+                                    <div class="form-check
+                                        <input class="form-check-input" type="checkbox" id="selectAll">
+                                    </div>
+                                </th>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th class="text-center">Stock</th>
+                                <th class="text-end">Cost</th>
+                                <th class="text-end">Price</th>
+                                <th class="text-end">Value</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products %}
+                            <tr>
+                                <td>
+                                    <div class="form-check
+                                        <input class="form-check-input product-checkbox" type="checkbox" 
+                                               value="{{ product.id }}" id="product_{{ product.id }}">
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if product.image %}
+                                        <img src="{{ product.image.url }}" alt="{{ product.name }}" 
+                                             class="me-2 rounded" style="width: 36px; height: 36px; object-fit: cover;">
+                                        {% else %}
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center me-2" 
+                                             style="width: 36px; height: 36px;">
+                                            <i class="fas fa-box text-muted"></i>
+                                        </div>
+                                        {% endif %}
+                                        <div>
+                                            <div class="fw-medium">
+                                                <a href="{% url 'inventory:product_detail' product.id %}" class="text-dark">
+                                                    {{ product.name }}
+                                                </a>
+                                            </div>
+                                            <div class="small text-muted">
+                                                {{ product.sku|default:"No SKU" }}
+                                                {% if product.barcode %}| {{ product.barcode }}{% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if product.category %}
+                                    <a href="{% url 'inventory:category_detail' product.category.slug %}" 
+                                       class="badge bg-light text-dark text-decoration-none">
+                                        {{ product.category.name }}
+                                    </a>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if product.stock_quantity <= 0 %}
+                                    <span class="badge bg-danger">Out of Stock</span>
+                                    {% elif product.stock_quantity <= product.reorder_level %}
+                                    <span class="badge bg-warning">{{ product.stock_quantity }}</span>
+                                    {% else %}
+                                    <span class="badge bg-success">{{ product.stock_quantity }}</span>
+                                    {% endif %}
+                                    {% if product.reorder_level > 0 %}
+                                    <div class="small text-muted">Reorder: {{ product.reorder_level }}</div>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    ${{ product.cost_price|default:0|floatformat:2 }}
+                                </td>
+                                <td class="text-end">
+                                    ${{ product.selling_price|default:0|floatformat:2 }}
+                                    {% if product.cost_price and product.selling_price %}
+                                    <div class="small {% if product.profit_margin >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {{ product.profit_margin|floatformat:1 }}%
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    ${{ product.total_value|default:0|floatformat:2 }}
+                                </td>
+                                <td class="text-center">
+                                    {% if product.status == 'active' %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                                                id="productActions{{ product.id }}" data-bs-toggle="dropdown" 
+                                                aria-expanded="false">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end" 
+                                            aria-labelledby="productActions{{ product.id }}">
+                                            <li>
+                                                <a class="dropdown-item" 
+                                                   href="{% url 'inventory:product_detail' product.id %}">
+                                                    <i class="fas fa-eye me-2"></i>View
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" 
+                                                   href="{% url 'inventory:product_edit' product.id %}">
+                                                    <i class="fas fa-edit me-2"></i>Edit
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" 
+                                                   href="{% url 'inventory:adjust_stock' product.id %}">
+                                                    <i class="fas fa-exchange-alt me-2"></i>Adjust Stock
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item text-danger" 
+                                                   href="{% url 'inventory:product_delete' product.id %}"
+                                                   onclick="return confirm('Are you sure you want to delete this product? This action cannot be undone.');">
+                                                    <i class="fas fa-trash-alt me-2"></i>Delete
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <th colspan="6" class="text-end">Total Value:</th>
+                                <th class="text-end">${{ total_values.total|default:0|floatformat:2 }}</th>
+                                <th colspan="2"></th>
+                            </tr>
+                            <tr>
+                                <th colspan="6" class="text-end">Total Cost:</th>
+                                <th class="text-end">${{ total_values.cost|default:0|floatformat:2 }}</th>
+                                <th colspan="2"></th>
+                            </tr>
+                            <tr>
+                                <th colspan="6" class="text-end">Total Profit (Est.):</th>
+                                <th class="text-end">
+                                    ${{ total_values.profit|default:0|floatformat:2 }}
+                                    {% if total_values.profit_margin %}
+                                    <div class="small {% if total_values.profit_margin >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        ({{ total_values.profit_margin|floatformat:1 }}%)
+                                    </div>
+                                    {% endif %}
+                                </th>
+                                <th colspan="2"></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                
+                {% if page_obj.has_other_pages %}
+                <div class="card-footer">
+                    <nav aria-label="Product pagination">
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                                   aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">&laquo;</span>
+                            </li>
+                            {% endif %}
+                            
+                            {% for i in page_obj.paginator.page_range %}
+                                {% if page_obj.number == i %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ i }}</span>
+                                </li>
+                                {% else %}
+                                    {% if i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                            {{ i }}
+                                        </a>
+                                    </li>
+                                    {% elif i == 1 or i == page_obj.paginator.num_pages %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                            {{ i }}
+                                        </a>
+                                    </li>
+                                    {% elif i == page_obj.number|add:'-4' or i == page_obj.number|add:'4' %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                                   aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">&raquo;</span>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+                
+                {% else %}
+                <div class="text-center py-5">
+                    <div class="mb-3">
+                        <i class="fas fa-box-open fa-4x text-muted"></i>
+                    </div>
+                    <h5 class="text-muted">No products found</h5>
+                    <p class="text-muted">
+                        {% if request.GET %}
+                        No products match your search criteria.
+                        {% else %}
+                        Get started by adding your first product.
+                        {% endif %}
+                    </p>
+                    <a href="{% url 'inventory:product_add' %}" class="btn btn-primary mt-3">
+                        <i class="fas fa-plus me-1"></i> Add Product
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Actions Modal -->
+<div class="modal fade" id="bulkActionsModal" tabindex="-1" aria-labelledby="bulkActionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bulkActionsModalLabel">Bulk Actions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="bulkActionForm" method="post" action="{% url 'inventory:product_bulk_action' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="product_ids" id="selectedProductIds">
+                    
+                    <div class="mb-3">
+                        <label for="bulkAction" class="form-label">Action</label>
+                        <select class="form-select" id="bulkAction" name="action" required>
+                            <option value="">Select an action...</option>
+                            <option value="activate">Activate Selected</option>
+                            <option value="deactivate">Deactivate Selected</option>
+                            <option value="add_to_category">Add to Category</option>
+                            <option value="remove_from_category">Remove from Category</option>
+                            <option value="delete">Delete Selected</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3 d-none" id="categoryField">
+                        <label for="bulkCategory" class="form-label">Category</label>
+                        <select class="form-select" id="bulkCategory" name="category">
+                            <option value="">Select a category...</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}">{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="alert alert-warning d-none" id="deleteWarning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        This will permanently delete the selected products. This action cannot be undone.
+                    </div>
+                </form>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <span id="selectedCount">0</span> product(s) selected
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="applyBulkAction">Apply</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importModalLabel">Import Products</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Download our <a href="{% static 'inventory/templates/product_import_template.xlsx' %}">import template</a> 
+                    to ensure your data is formatted correctly.
+                </div>
+                
+                <form method="post" enctype="multipart/form-data" id="importForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="importFile" class="form-label">Select file to import</label>
+                        <input class="form-control" type="file" id="importFile" name="file" accept=".xlsx,.xls,.csv" required>
+                        <div class="form-text">
+                            Supported formats: .xlsx, .xls, .csv (Max size: 5MB)
+                        </div>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="updateExisting" name="update_existing">
+                        <label class="form-check-label" for="updateExisting">
+                            Update existing products (matching by SKU or Barcode)
+                        </label>
+                    </div>
+                    
+                    <div class="progress d-none" id="importProgress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
+                             style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="startImport">
+                    <i class="fas fa-upload me-1"></i> Import
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Select all checkbox
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const productCheckboxes = document.querySelectorAll('.product-checkbox');
+    const selectedProductIds = document.getElementById('selectedProductIds');
+    const selectedCount = document.getElementById('selectedCount');
+    const bulkActionForm = document.getElementById('bulkActionForm');
+    const bulkActionSelect = document.getElementById('bulkAction');
+    const categoryField = document.getElementById('categoryField');
+    const deleteWarning = document.getElementById('deleteWarning');
+    const applyBulkActionBtn = document.getElementById('applyBulkAction');
+    const importForm = document.getElementById('importForm');
+    const importProgress = document.getElementById('importProgress');
+    const startImportBtn = document.getElementById('startImport');
+    
+    // Toggle select all checkboxes
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            productCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+            updateSelectedProducts();
+        });
+    }
+    
+    // Update selected products when individual checkboxes change
+    productCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedProducts);
+    });
+    
+    // Update the hidden input with selected product IDs
+    function updateSelectedProducts() {
+        const selectedProducts = Array.from(document.querySelectorAll('.product-checkbox:checked'))
+            .map(checkbox => checkbox.value);
+        
+        selectedProductIds.value = selectedProducts.join(',');
+        selectedCount.textContent = selectedProducts.length;
+        
+        // Enable/disable bulk action button based on selection
+        if (applyBulkActionBtn) {
+            applyBulkActionBtn.disabled = selectedProducts.length === 0;
+        }
+    }
+    
+    // Show/hide category field based on bulk action
+    if (bulkActionSelect) {
+        bulkActionSelect.addEventListener('change', function() {
+            const showCategory = this.value === 'add_to_category' || this.value === 'remove_from_category';
+            categoryField.classList.toggle('d-none', !showCategory);
+            deleteWarning.classList.toggle('d-none', this.value !== 'delete');
+            
+            // Toggle danger state for delete action
+            if (this.value === 'delete') {
+                applyBulkActionBtn.classList.remove('btn-primary');
+                applyBulkActionBtn.classList.add('btn-danger');
+            } else {
+                applyBulkActionBtn.classList.remove('btn-danger');
+                applyBulkActionBtn.classList.add('btn-primary');
+            }
+        });
+    }
+    
+    // Handle bulk action form submission
+    if (applyBulkActionBtn) {
+        applyBulkActionBtn.addEventListener('click', function() {
+            const action = bulkActionSelect.value;
+            const selectedCount = document.querySelectorAll('.product-checkbox:checked').length;
+            
+            if (selectedCount === 0) {
+                alert('Please select at least one product.');
+                return;
+            }
+            
+            if (!action) {
+                alert('Please select an action.');
+                return;
+            }
+            
+            if ((action === 'add_to_category' || action === 'remove_from_category') && 
+                !document.getElementById('bulkCategory').value) {
+                alert('Please select a category.');
+                return;
+            }
+            
+            if (action === 'delete') {
+                if (!confirm(`Are you sure you want to delete ${selectedCount} selected product(s)? This action cannot be undone.`)) {
+                    return;
+                }
+            }
+            
+            // Submit the form
+            bulkActionForm.submit();
+        });
+    }
+    
+    // Handle import form submission
+    if (startImportBtn) {
+        startImportBtn.addEventListener('click', function() {
+            const fileInput = document.getElementById('importFile');
+            
+            if (!fileInput.files.length) {
+                alert('Please select a file to import.');
+                return;
+            }
+            
+            // Show progress bar
+            importProgress.classList.remove('d-none');
+            const progressBar = importProgress.querySelector('.progress-bar');
+            progressBar.style.width = '0%';
+            progressBar.setAttribute('aria-valuenow', 0);
+            
+            // Disable button and show loading state
+            const originalBtnText = startImportBtn.innerHTML;
+            startImportBtn.disabled = true;
+            startImportBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Importing...';
+            
+            // Simulate progress (in a real app, you would use AJAX with progress events)
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                progressBar.style.width = progress + '%';
+                progressBar.setAttribute('aria-valuenow', progress);
+                
+                if (progress >= 90) {
+                    clearInterval(interval);
+                    // In a real app, you would submit the form here
+                    // and update progress based on server response
+                    setTimeout(() => {
+                        importForm.submit();
+                    }, 500);
+                }
+            }, 100);
+        });
+    }
+    
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

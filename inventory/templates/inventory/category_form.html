@@ -1,0 +1,275 @@
+{% extends 'inventory/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block page_title %}
+    {% if form.instance.pk %}Edit{% else %}Add New{% endif %} Category
+{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'inventory:category_list' %}">Categories</a></li>
+<li class="breadcrumb-item active" aria-current="page">
+    {% if form.instance.pk %}{{ form.instance.name }}{% else %}New{% endif %}
+</li>
+{% endblock %}
+
+{% block page_actions %}
+<button type="submit" form="categoryForm" class="btn btn-primary">
+    <i class="fas fa-save me-1"></i> Save
+</button>
+<a href="{% if form.instance.pk %}{% url 'inventory:category_detail' form.instance.slug %}{% else %}{% url 'inventory:category_list' %}{% endif %}" 
+   class="btn btn-outline-secondary">
+    <i class="fas fa-times me-1"></i> Cancel
+</a>
+{% endblock %}
+
+{% block page_content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Category Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" id="categoryForm">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            {{ form.name|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.is_active|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    {{ form.description|as_crispy_field }}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Category Image</label>
+                                <div class="custom-file">
+                                    <input type="file" name="image" class="custom-file-input" id="id_image" 
+                                           accept="image/*" onchange="previewImage(this, 'imagePreview')">
+                                    <label class="custom-file-label" for="id_image">
+                                        {% if form.instance.image %}{{ form.instance.image.name|slice:":30" }}{% else %}Choose file...{% endif %}
+                                    </label>
+                                </div>
+                                <small class="form-text text-muted">
+                                    Recommended size: 800x400px. Max size: 2MB. Allowed formats: JPG, PNG, GIF.
+                                </small>
+                                {% if form.image.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.image.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            {% if form.instance.image %}
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="image-clear" id="image-clear">
+                                    <label class="form-check-label" for="image-clear">
+                                        Remove current image
+                                    </label>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-center">
+                                {% if form.instance.image %}
+                                    <img id="imagePreview" src="{{ form.instance.image.url }}" 
+                                         class="img-fluid rounded border" style="max-height: 200px;">
+                                {% else %}
+                                    <img id="imagePreview" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" 
+                                         class="img-fluid rounded border d-none" style="max-height: 200px;">
+                                    <div id="noImagePreview" class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                         style="height: 200px;">
+                                        <div class="text-center text-muted">
+                                            <i class="fas fa-image fa-3x mb-2 d-block"></i>
+                                            <span>No image selected</span>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Save Category
+                        </button>
+                        <a href="{% if form.instance.pk %}{% url 'inventory:category_detail' form.instance.slug %}{% else %}{% url 'inventory:category_list' %}{% endif %}" 
+                           class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Category Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="text-muted mb-2">Tips for Categories</h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2">
+                            <i class="fas fa-info-circle text-primary me-1"></i>
+                            Categories help organize your products logically.
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-info-circle text-primary me-1"></i>
+                            Use descriptive names that make it easy to find products.
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-info-circle text-primary me-1"></i>
+                            You can filter and report on products by category.
+                        </li>
+                    </ul>
+                </div>
+                
+                {% if form.instance.pk %}
+                <hr>
+                <div class="mb-0">
+                    <h6 class="text-muted mb-2">Category Stats</h6>
+                    <ul class="list-unstyled small">
+                        <li class="d-flex justify-content-between py-1">
+                            <span>Products:</span>
+                            <span class="fw-medium">{{ form.instance.products.count }}</span>
+                        </li>
+                        <li class="d-flex justify-content-between py-1">
+                            <span>Created:</span>
+                            <span>{{ form.instance.created_at|date:"M d, Y" }}</span>
+                        </li>
+                        {% if form.instance.updated_at %}
+                        <li class="d-flex justify-content-between py-1">
+                            <span>Last Updated:</span>
+                            <span>{{ form.instance.updated_at|date:"M d, Y" }}</span>
+                        </li>
+                        {% endif %}
+                        {% if form.instance.created_by %}
+                        <li class="d-flex justify-content-between py-1">
+                            <span>Created By:</span>
+                            <span>{{ form.instance.created_by.get_full_name|default:form.instance.created_by.username }}</span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if form.instance.pk and form.instance.products.exists %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Products in this Category</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for product in form.instance.products.all|slice:":5" %}
+                    <a href="{% url 'inventory:product_detail' product.id %}" 
+                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            {% if product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}" 
+                                 class="rounded me-2" style="width: 30px; height: 30px; object-fit: cover;">
+                            {% else %}
+                            <div class="bg-light rounded d-flex align-items-center justify-content-center me-2" 
+                                 style="width: 30px; height: 30px;">
+                                <i class="fas fa-box text-muted"></i>
+                            </div>
+                            {% endif %}
+                            <span>{{ product.name|truncatechars:25 }}</span>
+                        </div>
+                        <span class="badge {% if product.stock_quantity > 0 %}bg-success{% else %}bg-danger{% endif %} rounded-pill">
+                            {{ product.stock_quantity|default:0 }}
+                        </span>
+                    </a>
+                    {% endfor %}
+                    
+                    {% if form.instance.products.count > 5 %}
+                    <div class="text-center py-2">
+                        <a href="{% url 'inventory:product_list' %}?category={{ form.instance.slug }}" 
+                           class="btn btn-sm btn-outline-primary">
+                            View All ({{ form.instance.products.count }})
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    // Preview image before upload
+    function previewImage(input, previewId) {
+        const preview = document.getElementById(previewId);
+        const noPreview = document.getElementById('noImagePreview');
+        const fileLabel = document.querySelector('.custom-file-label');
+        
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                if (preview) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+                    if (noPreview) noPreview.classList.add('d-none');
+                }
+            }
+            
+            reader.readAsDataURL(input.files[0]);
+            fileLabel.textContent = input.files[0].name;
+        } else {
+            if (preview) {
+                preview.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+                preview.classList.add('d-none');
+                if (noPreview) noPreview.classList.remove('d-none');
+            }
+            fileLabel.textContent = 'Choose file...';
+        }
+    }
+    
+    // Handle image clear checkbox
+    document.addEventListener('DOMContentLoaded', function() {
+        const clearCheckbox = document.getElementById('image-clear');
+        const imageInput = document.getElementById('id_image');
+        const imagePreview = document.getElementById('imagePreview');
+        const noPreview = document.getElementById('noImagePreview');
+        const fileLabel = document.querySelector('.custom-file-label');
+        
+        if (clearCheckbox) {
+            clearCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    if (imagePreview) {
+                        imagePreview.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+                        imagePreview.classList.add('d-none');
+                        if (noPreview) noPreview.classList.remove('d-none');
+                    }
+                    if (imageInput) {
+                        imageInput.value = '';
+                        fileLabel.textContent = 'Choose file...';
+                    }
+                }
+            });
+        }
+        
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+{% endblock %}

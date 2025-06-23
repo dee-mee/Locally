@@ -1,0 +1,201 @@
+{% extends 'inventory/base.html' %}
+{% load static %}
+
+{% block page_title %}Categories{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active" aria-current="page">Categories</li>
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'inventory:category_add' %}" class="btn btn-primary">
+    <i class="fas fa-plus me-1"></i> Add Category
+</a>
+{% endblock %}
+
+{% block page_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">All Categories</h5>
+                <div class="search-form">
+                    <form method="get" class="d-flex">
+                        <div class="input-group">
+                            <input type="text" name="q" class="form-control" placeholder="Search categories..." 
+                                   value="{{ request.GET.q }}">
+                            <button class="btn btn-outline-secondary" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            {% if request.GET.q %}
+                            <a href="{% url 'inventory:category_list' %}" class="btn btn-outline-danger" 
+                               title="Clear search">
+                                <i class="fas fa-times"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {% if categories %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th class="text-center">Products</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category in categories %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if category.image %}
+                                        <img src="{{ category.image.url }}" alt="{{ category.name }}" 
+                                             class="me-2 rounded" style="width: 32px; height: 32px; object-fit: cover;">
+                                        {% else %}
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center me-2" 
+                                             style="width: 32px; height: 32px;">
+                                            <i class="fas fa-folder text-muted"></i>
+                                        </div>
+                                        {% endif %}
+                                        <a href="{% url 'inventory:category_detail' category.slug %}" class="text-dark fw-medium">
+                                            {{ category.name }}
+                                        </a>
+                                    </div>
+                                </td>
+                                <td>{{ category.description|truncatechars:60|default:"No description" }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary rounded-pill">
+                                        {{ category.products.count }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    {% if category.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                                                id="categoryActions{{ category.id }}" data-bs-toggle="dropdown" 
+                                                aria-expanded="false">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end" 
+                                            aria-labelledby="categoryActions{{ category.id }}">
+                                            <li>
+                                                <a class="dropdown-item" 
+                                                   href="{% url 'inventory:category_detail' category.slug %}">
+                                                    <i class="fas fa-eye me-2"></i>View
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" 
+                                                   href="{% url 'inventory:category_edit' category.slug %}">
+                                                    <i class="fas fa-edit me-2"></i>Edit
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item text-danger" 
+                                                   href="{% url 'inventory:category_delete' category.slug %}"
+                                                   onclick="return confirm('Are you sure you want to delete this category? This action cannot be undone.');">
+                                                    <i class="fas fa-trash-alt me-2"></i>Delete
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {% if is_paginated %}
+                <div class="card-footer">
+                    <nav aria-label="Category pagination">
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" 
+                                   aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">&laquo;</span>
+                            </li>
+                            {% endif %}
+                            
+                            {% for i in paginator.page_range %}
+                                {% if page_obj.number == i %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ i }}</span>
+                                </li>
+                                {% else %}
+                                    {% if i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{ i }}</a>
+                                    </li>
+                                    {% elif i == 1 or i == paginator.num_pages %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{ i }}</a>
+                                    </li>
+                                    {% elif i == page_obj.number|add:'-4' or i == page_obj.number|add:'4' %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" 
+                                   aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">&raquo;</span>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+                
+                {% else %}
+                <div class="text-center py-5">
+                    <div class="mb-3">
+                        <i class="fas fa-folder-open fa-4x text-muted"></i>
+                    </div>
+                    <h5 class="text-muted">No categories found</h5>
+                    <p class="text-muted">
+                        {% if request.GET.q %}
+                        Try adjusting your search or filter to find what you're looking for.
+                        {% else %}
+                        Get started by creating a new category.
+                        {% endif %}
+                    </p>
+                    <a href="{% url 'inventory:category_add' %}" class="btn btn-primary mt-3">
+                        <i class="fas fa-plus me-1"></i> Add Category
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

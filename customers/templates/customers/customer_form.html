@@ -1,0 +1,215 @@
+{% extends 'customers/base_customers.html' %}
+{% load crispy_forms_tags %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block header %}
+    <div class="d-flex align-items-center">
+        <a href="{% if customer %}{% url 'customers:customer_detail' customer.pk %}{% else %}{% url 'customers:customer_list' %}{% endif %}" 
+           class="text-decoration-none me-3">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <h1 class="h4 mb-0">{{ title }}</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{% url 'customers:customer_list' %}">Customers</a></li>
+                    {% if customer %}
+                        <li class="breadcrumb-item"><a href="{% url 'customers:customer_detail' customer.pk %}">{{ customer.get_short_name }}</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Edit</li>
+                    {% else %}
+                        <li class="breadcrumb-item active" aria-current="page">Add New</li>
+                    {% endif %}
+                </ol>
+            </nav>
+        </div>
+    </div>
+{% endblock %}
+
+{% block header_buttons %}
+    <div class="btn-group">
+        <button type="submit" form="customerForm" class="btn btn-primary btn-sm">
+            <i class="bi bi-check-lg me-1"></i> Save
+        </button>
+        <a href="{% if customer %}{% url 'customers:customer_detail' customer.pk %}{% else %}{% url 'customers:customer_list' %}{% endif %}" 
+           class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-x-lg me-1"></i> Cancel
+        </a>
+    </div>
+{% endblock %}
+
+{% block customer_content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" id="customerForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            {{ form.first_name|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.last_name|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            {{ form.email|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.phone|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            {{ form.customer_type|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.company_name|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-12">
+                            {{ form.notes|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                {{ form.is_active|as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i> Save Customer
+                        </button>
+                        <a href="{% if customer %}{% url 'customers:customer_detail' customer.pk %}{% else %}{% url 'customers:customer_list' %}{% endif %}" 
+                           class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Address Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-geo-alt me-2"></i>Address
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        {{ form.address|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.city|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.state|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.postal_code|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.country|as_crispy_field }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tax Information -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-file-earmark-text me-2"></i>Tax Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    {{ form.tax_number|as_crispy_field }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+{% if customer %}
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong>{{ customer.get_full_name }}</strong>?</p>
+                <p class="text-danger">This action cannot be undone. All associated data will be permanently removed.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{% url 'customers:customer_delete' customer.pk %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete Customer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle company name field based on customer type
+    const customerTypeField = document.getElementById('id_customer_type');
+    const companyField = document.getElementById('div_id_company_name').parentNode;
+    
+    function toggleCompanyField() {
+        if (customerTypeField.value === 'individual') {
+            companyField.style.display = 'none';
+        } else {
+            companyField.style.display = 'block';
+        }
+    }
+    
+    // Initial check
+    toggleCompanyField();
+    
+    // Add event listener
+    if (customerTypeField) {
+        customerTypeField.addEventListener('change', toggleCompanyField);
+    }
+    
+    // Initialize phone input formatting
+    const phoneInput = document.getElementById('id_phone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            let x = e.target.value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,3})(\d{0,4})/);
+            e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+        });
+    }
+    
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

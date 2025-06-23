@@ -1,0 +1,305 @@
+{% extends 'customers/base_customers.html' %}
+{% load static humanize %}
+
+{% block page_title %}Customer List{% endblock %}
+
+{% block header %}
+    <div class="d-flex align-items-center">
+        <i class="bi bi-people me-2" style="font-size: 1.5rem;"></i>
+        <span>Customers</span>
+    </div>
+{% endblock %}
+
+{% block header_buttons %}
+    <div class="btn-group me-2">
+        <a href="{% url 'customers:customer_create' %}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-plus-circle me-1"></i> Add Customer
+        </a>
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#importModal">
+            <i class="bi bi-upload me-1"></i> Import
+        </button>
+        <a href="{% url 'customers:customer_export' %}" class="btn btn-sm btn-outline-success">
+            <i class="bi bi-download me-1"></i> Export
+        </a>
+    </div>
+{% endblock %}
+
+{% block customer_content %}
+<!-- Search and Filter Form -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control" placeholder="Search customers..." 
+                           value="{{ query|default:'' }}">
+                    <button class="btn btn-outline-secondary" type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select name="type" class="form-select">
+                    <option value="">All Types</option>
+                    {% for value, label in customer_types.items %}
+                        <option value="{{ value }}" {% if customer_type == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel me-1"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Customers Table -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Company</th>
+                        <th>Contact</th>
+                        <th>Type</th>
+                        <th>Orders</th>
+                        <th>Total Spent</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'customers:customer_detail' customer.pk %}" class="text-decoration-none">
+                                <strong>{{ customer.first_name }} {{ customer.last_name }}</strong>
+                            </a>
+                        </td>
+                        <td>{{ customer.company_name|default:"-" }}</td>
+                        <td>
+                            {% if customer.email %}
+                                <div><i class="bi bi-envelope me-1"></i> {{ customer.email }}</div>
+                            {% endif %}
+                            {% if customer.phone %}
+                                <div><i class="bi bi-telephone me-1"></i> {{ customer.phone }}</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-info">
+                                {{ customer.get_customer_type_display }}
+                            </span>
+                        </td>
+                        <td>{{ customer.total_orders }}</td>
+                        <td>${{ customer.total_purchases|default:0|floatformat:2|intcomma }}</td>
+                        <td>
+                            {% if customer.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'customers:customer_detail' customer.pk %}" 
+                                   class="btn btn-outline-primary" 
+                                   data-bs-toggle="tooltip" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'customers:customer_edit' customer.pk %}" 
+                                   class="btn btn-outline-secondary" 
+                                   data-bs-toggle="tooltip" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="#" 
+                                   class="btn btn-outline-danger" 
+                                   data-bs-toggle="modal" 
+                                   data-bs-target="#deleteModal{{ customer.id }}"
+                                   title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                            
+                            <!-- Delete Confirmation Modal -->
+                            <div class="modal fade" id="deleteModal{{ customer.id }}" tabindex="-1" 
+                                 aria-labelledby="deleteModalLabel{{ customer.id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="deleteModalLabel{{ customer.id }}">
+                                                Confirm Delete
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>Are you sure you want to delete <strong>{{ customer.first_name }} {{ customer.last_name }}</strong>?</p>
+                                            <p class="text-danger">This action cannot be undone.</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <form action="{% url 'customers:customer_delete' customer.pk %}" method="post" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="bi bi-people display-6 d-block mb-2"></i>
+                                No customers found.
+                                <a href="{% url 'customers:customer_create' %}" class="d-block mt-2">
+                                    Add your first customer
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if customers.has_other_pages %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center mt-4">
+                {% if customers.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}{% if customer_type %}&type={{ customer_type }}{% endif %}">
+                            &laquo; First
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ customers.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if customer_type %}&type={{ customer_type }}{% endif %}">
+                            Previous
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo; First</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Previous</span>
+                    </li>
+                {% endif %}
+                
+                {% for i in customers.paginator.page_range %}
+                    {% if customers.number == i %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ i }}</span>
+                        </li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ i }}{% if query %}&q={{ query }}{% endif %}{% if customer_type %}&type={{ customer_type }}{% endif %}">
+                                {{ i }}
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if customers.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ customers.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if customer_type %}&type={{ customer_type }}{% endif %}">
+                            Next
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ customers.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if customer_type %}&type={{ customer_type }}{% endif %}">
+                            Last &raquo;
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Last &raquo;</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importModalLabel">Import Customers</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'customers:customer_import' %}" enctype="multipart/form-data">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="csv_file" class="form-label">Select CSV/Excel file</label>
+                        <input class="form-control" type="file" id="csv_file" name="csv_file" accept=".csv, .xlsx, .xls" required>
+                        <div class="form-text">
+                            <a href="#" class="small" id="downloadTemplate">
+                                <i class="bi bi-download"></i> Download template file
+                            </a>
+                        </div>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        The first row should contain column headers matching the template.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Import</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Handle template download
+    document.getElementById('downloadTemplate').addEventListener('click', function(e) {
+        e.preventDefault();
+        // Create a sample CSV content
+        const csvContent = [
+            'First Name,Last Name,Email,Phone,Company,Customer Type,Tax ID,Address,City,State,Postal Code,Country,Notes',
+            'John,Doe,john@example.com,+1234567890,Acme Inc.,business,123456,123 Main St,New York,NY,10001,USA,Important client',
+            'Jane,Smith,jane@example.com,+1987654321,,individual,,456 Oak Ave,Los Angeles,CA,90001,USA,'
+        ].join('\n');
+        
+        // Create a Blob with the CSV content
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        
+        // Create a download link and trigger it
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'customers_import_template.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% block page_title %}{% endblock %} | Customers{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse
+            {% if not request.user.is_authenticated %}d-none{% endif %}">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'customer_list' %}active{% endif %}" 
+                           href="{% url 'customers:customer_list' %}">
+                            <i class="bi bi-people me-2"></i>All Customers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'customer_create' %}active{% endif %}" 
+                           href="{% url 'customers:customer_create' %}">
+                            <i class="bi bi-plus-circle me-2"></i>Add New Customer
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'customer_import' %}active{% endif %}" 
+                           href="{% url 'customers:customer_import' %}">
+                            <i class="bi bi-upload me-2"></i>Import Customers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'customers:customer_export' %}">
+                            <i class="bi bi-download me-2"></i>Export Customers
+                        </a>
+                    </li>
+                    <li class="nav-item mt-3">
+                        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                            <span>Reports</span>
+                        </h6>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'reports:sales_report' %}">
+                            <i class="bi bi-graph-up me-2"></i>Sales Report
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">
+                    {% block header %}{% endblock %}
+                </h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    {% block header_buttons %}{% endblock %}
+                </div>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% block customer_content %}
+            {% endblock %}
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any customer-specific JavaScript here
+</script>
+{% endblock %}

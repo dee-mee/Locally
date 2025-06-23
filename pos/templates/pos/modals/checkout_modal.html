@@ -1,0 +1,121 @@
+<!-- Checkout Modal -->
+<div class="modal fade" id="checkoutModal" tabindex="-1" aria-labelledby="checkoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="checkoutModalLabel">Complete Order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-7">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="mb-3">Order Summary</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Item</th>
+                                                <th class="text-end">Qty</th>
+                                                <th class="text-end">Price</th>
+                                                <th class="text-end">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="checkoutItems">
+                                            <!-- Order items will be added here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="border-top pt-3">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Subtotal:</span>
+                                        <span id="checkoutSubtotal">$0.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Tax ({{ tax_rate|default:0 }}%):</span>
+                                        <span id="checkoutTax">$0.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Discount:</span>
+                                        <span class="text-danger" id="checkoutDiscount">-$0.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between fw-bold fs-5">
+                                        <span>Total:</span>
+                                        <span id="checkoutTotal">$0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="mb-3">Payment</h6>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Customer</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="customerName" placeholder="Walk-in Customer" readonly>
+                                        <button class="btn btn-outline-secondary" type="button" id="changeCustomer">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Payment Method</label>
+                                    <div class="btn-group w-100" role="group">
+                                        <input type="radio" class="btn-check" name="paymentMethod" id="cash" autocomplete="off" checked>
+                                        <label class="btn btn-outline-primary" for="cash">
+                                            <i class="bi bi-cash-coin me-1"></i> Cash
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check" name="paymentMethod" id="card" autocomplete="off">
+                                        <label class="btn btn-outline-primary" for="card">
+                                            <i class="bi bi-credit-card me-1"></i> Card
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check" name="paymentMethod" id="other" autocomplete="off">
+                                        <label class="btn btn-outline-primary" for="other">
+                                            <i class="bi bi-wallet2 me-1"></i> Other
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="amountTendered" class="form-label">Amount Tendered</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="amountTendered" value="0.00" step="0.01">
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="changeDue" class="form-label">Change Due</label>
+                                    <input type="text" class="form-control fw-bold" id="changeDue" value="$0.00" readonly>
+                                </div>
+                                
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="printReceipt" checked>
+                                    <label class="form-check-label" for="printReceipt">
+                                        Print receipt
+                                    </label>
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-success btn-lg" id="completeOrderBtn">
+                                        <i class="bi bi-check-circle me-1"></i> Complete Order
+                                    </button>
+                                    <button class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

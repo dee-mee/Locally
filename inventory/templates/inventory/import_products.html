@@ -1,0 +1,108 @@
+{% extends 'inventory/base.html' %}
+{% load static %}
+
+{% block page_title %}Import Products{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'inventory:product_list' %}">Products</a></li>
+<li class="breadcrumb-item active" aria-current="page">Import Products</li>
+{% endblock %}
+
+{% block page_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Import Products</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Download our <a href="{% static 'inventory/templates/product_import_template.xlsx' %}">import template</a>
+                    to ensure your data is formatted correctly.
+                </div>
+                
+                <form method="post" enctype="multipart/form-data" class="mt-4">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Select File</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".xlsx, .xls, .csv" required>
+                        <div class="form-text">Supported formats: .xlsx, .xls, .csv</div>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="has_headers" name="has_headers" checked>
+                        <label class="form-check-label" for="has_headers">
+                            First row contains headers
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="update_existing" name="update_existing">
+                        <label class="form-check-label" for="update_existing">
+                            Update existing products with matching SKU
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload me-2"></i>Upload and Import
+                    </button>
+                    <a href="{% url 'inventory:product_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </a>
+                </form>
+                
+                {% if import_results %}
+                <div class="mt-4">
+                    <h5>Import Results</h5>
+                    <div class="alert alert-{{ import_results.success|yesno:'success,danger' }}">
+                        {% if import_results.success %}
+                            <i class="fas fa-check-circle me-2"></i>
+                            Successfully imported {{ import_results.imported }} products.
+                            {% if import_results.updated %}
+                                <br>Updated {{ import_results.updated }} existing products.
+                            {% endif %}
+                            {% if import_results.skipped %}
+                                <br>Skipped {{ import_results.skipped }} rows (duplicate SKUs).
+                            {% endif %}
+                        {% else %}
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Error during import: {{ import_results.error }}
+                        {% endif %}
+                    </div>
+                    
+                    {% if import_results.errors %}
+                    <div class="alert alert-warning">
+                        <h6>Errors found in the following rows:</h6>
+                        <ul class="mb-0">
+                            {% for error in import_results.errors %}
+                            <li>Row {{ error.row }}: {{ error.message }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Client-side validation for file type
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const fileInput = document.getElementById('file');
+        const filePath = fileInput.value;
+        const allowedExtensions = /(\.|\/)(xlsx?|csv)$/i;
+        
+        if (!allowedExtensions.exec(filePath)) {
+            e.preventDefault();
+            alert('Please upload file having extensions .xlsx, .xls, or .csv only.');
+            fileInput.value = '';
+        }
+    });
+</script>
+{% endblock %}

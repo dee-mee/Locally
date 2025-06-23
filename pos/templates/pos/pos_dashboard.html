@@ -1,0 +1,340 @@
+{% extends 'pos/base_pos.html' %}
+{% load static %}
+
+{% block pos_title %}Point of Sale{% endblock %}
+
+{% block pos_content %}
+<div class="mb-4">
+    <div class="input-group">
+        <span class="input-group-text bg-white border-end-0">
+            <i class="bi bi-search"></i>
+        </span>
+        <input type="text" class="form-control" id="productSearch" placeholder="Search products by name, SKU, or barcode...">
+        <button class="btn btn-outline-secondary" type="button" id="barcodeBtn" data-bs-toggle="modal" data-bs-target="#barcodeModal">
+            <i class="bi bi-upc-scan"></i>
+        </button>
+    </div>
+</div>
+
+<div class="mb-4">
+    <div class="categories-nav">
+        <button class="category-btn active" data-category="all">All Products</button>
+        {% for category in categories %}
+        <button class="category-btn" data-category="{{ category.id }}">{{ category.name }}</button>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="products-container">
+    <div class="row g-3" id="productsGrid">
+        {% for product in products %}
+        <div class="col-6 col-md-4 col-lg-3 col-xxl-2">
+            <div class="product-card card h-100" 
+                 data-product-id="{{ product.id }}" 
+                 data-category="{% for cat in product.categories.all %}{{ cat.id }} {% endfor %}"
+                 data-barcode="{{ product.barcode|default:'' }}"
+                 data-sku="{{ product.sku|default:'' }}">
+                <div class="position-relative">
+                    <img src="{{ product.image.url|default:'/static/img/default-product.png' }}" 
+                         class="card-img-top product-img" 
+                         alt="{{ product.name }}"
+                         onerror="this.src='/static/img/default-product.png'"
+                         style="height: 140px; object-fit: cover;">
+                    {% if product.on_sale %}
+                    <span class="badge bg-danger position-absolute top-0 end-0 m-2">SALE</span>
+                    {% endif %}
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h6 class="card-title product-title mb-1">{{ product.name }}</h6>
+                    <div class="mb-2">
+                        <span class="text-primary fw-bold product-price">${{ product.price|floatformat:2 }}</span>
+                        {% if product.compare_at_price and product.compare_at_price > product.price %}
+                        <small class="text-muted text-decoration-line-through ms-1">${{ product.compare_at_price|floatformat:2 }}</small>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-auto">
+                        <span class="badge bg-{% if product.stock > 0 %}success{% else %}danger{% endif %} product-stock">
+                            {{ product.stock }} in stock
+                        </span>
+                        <button class="btn btn-sm btn-outline-primary add-to-cart" {% if product.stock <= 0 %}disabled{% endif %}>
+                            <i class="bi bi-plus-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="bi bi-box-seam display-4 text-muted mb-3"></i>
+                <h5>No products found</h5>
+                <p class="text-muted">Try adjusting your search or add new products.</p>
+                <a href="{% url 'inventory:product_add' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i> Add Product
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    {% if is_paginated %}
+    <nav class="mt-4" aria-label="Products pagination">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1" aria-label="First">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo;&laquo;</span>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo;</span>
+                </li>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&raquo;</span>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">&raquo;&raquo;</span>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+.categories-nav {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    scrollbar-width: thin;
+}
+
+.categories-nav::-webkit-scrollbar {
+    height: 5px;
+}
+
+.categories-nav::-webkit-scrollbar-thumb {
+    background-color: #dee2e6;
+    border-radius: 10px;
+}
+
+.category-btn {
+    white-space: nowrap;
+    margin-right: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    color: #495057;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.category-btn:hover, .category-btn.active {
+    background: #0d6efd;
+    color: #fff;
+    border-color: #0d6efd;
+}
+
+.product-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    height: 100%;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.product-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+}
+
+.product-img {
+    object-fit: cover;
+    height: 140px;
+    background-color: #f8f9fa;
+}
+
+.product-title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: 2.8em;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.product-stock {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.add-to-cart {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50% !important;
+    padding: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767.98px) {
+    .product-card {
+        margin-bottom: 1rem;
+    }
+    
+    .product-img {
+        height: 120px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Category filter
+    const categoryBtns = document.querySelectorAll('.category-btn');
+    const productCards = document.querySelectorAll('.product-card');
+    
+    categoryBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Update active state
+            categoryBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            const category = this.dataset.category;
+            
+            // Filter products
+            productCards.forEach(card => {
+                if (category === 'all' || card.dataset.category.includes(category)) {
+                    card.closest('.col-6').style.display = '';
+                } else {
+                    card.closest('.col-6').style.display = 'none';
+                }
+            });
+        });
+    });
+    
+    // Product search
+    const productSearch = document.getElementById('productSearch');
+    if (productSearch) {
+        productSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            productCards.forEach(card => {
+                const title = card.querySelector('.product-title').textContent.toLowerCase();
+                const sku = card.dataset.sku ? card.dataset.sku.toLowerCase() : '';
+                const barcode = card.dataset.barcode ? card.dataset.barcode.toLowerCase() : '';
+                
+                if (title.includes(searchTerm) || 
+                    sku.includes(searchTerm) || 
+                    barcode.includes(searchTerm)) {
+                    card.closest('.col-6').style.display = '';
+                } else {
+                    card.closest('.col-6').style.display = 'none';
+                }
+            });
+        });
+    }
+    
+    // Add to cart functionality
+    document.querySelectorAll('.add-to-cart').forEach(button => {
+        button.addEventListener('click', function() {
+            const productCard = this.closest('.product-card');
+            const productId = productCard.dataset.productId;
+            const productName = productCard.querySelector('.product-title').textContent;
+            const productPrice = parseFloat(productCard.querySelector('.product-price').textContent.replace('$', ''));
+            const productImage = productCard.querySelector('.product-img').src;
+            
+            // Create a custom event to add the product to the cart
+            const event = new CustomEvent('addToCart', {
+                detail: {
+                    id: productId,
+                    name: productName,
+                    price: productPrice,
+                    image: productImage,
+                    quantity: 1
+                }
+            });
+            
+            // Dispatch the event
+            document.dispatchEvent(event);
+            
+            // Show success message
+            showToast(`${productName} added to cart`, 'success');
+            
+            // Show sidebar on mobile
+            const sidebar = document.getElementById('posSidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            if (window.innerWidth < 992) {
+                sidebar.classList.add('show');
+                sidebarOverlay.classList.add('show');
+            }
+        });
+    });
+    
+    // Show toast notification
+    function showToast(message, type = 'success') {
+        const toastEl = document.getElementById('toast');
+        const toastBody = toastEl.querySelector('.toast-body');
+        
+        // Update toast content and style
+        toastBody.textContent = message;
+        toastEl.className = `toast align-items-center text-white bg-${type} border-0`;
+        
+        // Show the toast
+        const toast = new bootstrap.Toast(toastEl, { autohide: true, delay: 3000 });
+        toast.show();
+    }
+});
+</script>
+{% endblock %}

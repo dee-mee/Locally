@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% block page_title %}{% endblock %} | POS{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/pos.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="pos-container">
+    <!-- Mobile Toggle Button -->
+    <button class="btn btn-primary d-lg-none position-fixed" id="sidebarToggle" style="z-index: 1001; bottom: 1.5rem; right: 1.5rem; width: 50px; height: 50px; border-radius: 50%;">
+        <i class="bi bi-cart-fill"></i>
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartBadge">
+            0
+        </span>
+    </button>
+    
+    <!-- Overlay for mobile -->
+    <div class="overlay" id="sidebarOverlay"></div>
+    
+    <!-- Sidebar -->
+    {% include 'pos/includes/sidebar.html' %}
+    
+    <!-- Main Content -->
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-12 col-lg-3 bg-light border-start d-flex flex-column" style="min-height: 100vh;">
+            {% include 'pos/includes/sidebar.html' %}
+        </div>
+    </div>
+</div>
+
+<!-- Checkout Modal -->
+{% include 'pos/modals/checkout_modal.html' %}
+
+<!-- Barcode Scanner Modal -->
+{% include 'pos/modals/barcode_modal.html' %}
+
+<!-- Order Complete Modal -->
+<div class="modal fade" id="orderCompleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-check-circle me-2"></i>
+                    Order Complete
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div class="mb-3">
+                    <i class="bi bi-check-circle text-success" style="font-size: 4rem;"></i>
+                </div>
+                <h4>Thank You!</h4>
+                <p class="text-muted mb-0">Order #<span id="orderCompleteNumber">0000</span> has been placed successfully.</p>
+                <p class="text-muted">Total: <span class="fw-bold" id="orderCompleteTotal">$0.00</span></p>
+                
+                <div class="d-flex justify-content-center gap-2 mt-4">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg me-1"></i> Close
+                    </button>
+                    <button type="button" class="btn btn-primary" id="printReceiptBtn">
+                        <i class="bi bi-printer me-1"></i> Print Receipt
+                    </button>
+                    <a href="{% url 'pos:pos_dashboard' %}" class="btn btn-success">
+                        <i class="bi bi-plus-circle me-1"></i> New Order
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+    <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto">Notification</strong>
+            <small>Just now</small>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body"></div>
+    </div>
+</div>
+
+<!-- Hidden input for CSRF token -->
+<input type="hidden" id="csrf_token" value="{{ csrf_token }}">
+
+<!-- Hidden input for tax rate -->
+<input type="hidden" id="taxRate" value="{{ tax_rate|default:'0' }}">
+{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<link href="{% static 'pos/css/pos.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<!-- Load required libraries -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+
+<!-- Load POS scripts -->
+<script src="{% static 'pos/js/pos.js' %}"></script>
+<script src="{% static 'pos/js/barcode-scanner.js' %}"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Toggle sidebar on mobile
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.getElementById('posSidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    
+    if (sidebarToggle && sidebar && sidebarOverlay) {
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('show');
+            sidebarOverlay.classList.toggle('show');
+        });
+        
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('show');
+            sidebarOverlay.classList.remove('show');
+        });
+    }
+    
+    // Handle print receipt button
+    const printReceiptBtn = document.getElementById('printReceiptBtn');
+    if (printReceiptBtn) {
+        printReceiptBtn.addEventListener('click', function() {
+            window.print();
+        });
+    }
+    
+    // Handle barcode scanned event
+    document.addEventListener('barcodeScanned', function(e) {
+        const barcode = e.detail.barcode;
+        console.log('Barcode scanned:', barcode);
+        
+        // Here you would typically make an AJAX call to find the product by barcode
+        // and add it to the cart. For example:
+        /*
+        fetch(`/api/products/?barcode=${barcode}`)
+            .then(response => response.json())
+            .then(product => {
+                if (product) {
+                    const event = new CustomEvent('addToCart', { detail: product });
+                    document.dispatchEvent(event);
+                } else {
+                    showToast('Product not found', 'warning');
+                }
+            });
+        */
+    });
+    
+    // Show toast notification
+    window.showToast = function(message, type = 'info') {
+        const toastEl = document.getElementById('toast');
+        if (!toastEl) return;
+        
+        const toastBody = toastEl.querySelector('.toast-body');
+        toastBody.textContent = message;
+        
+        // Update toast class based on type
+        toastEl.className = `toast align-items-center text-white bg-${type} border-0`;
+        
+        const toast = new bootstrap.Toast(toastEl, { autohide: true, delay: 3000 });
+        toast.show();
+    };
+});
+</script>
+{% endblock %}
