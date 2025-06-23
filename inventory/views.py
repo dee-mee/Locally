@@ -411,7 +411,11 @@ def adjust_stock(request, product_id):
 @login_required
 @permission_required('inventory.add_product')
 def import_products(request):
-    """Import products from CSV/Excel"""
+    """Import products from CSV/Excel using django-import-export"""
+    from tablib import Dataset
+    from .resources import ProductResource
+    import pandas as pd
+    
     import_results = None
     
     if request.method == 'POST':
@@ -422,29 +426,87 @@ def import_products(request):
                 messages.error(request, 'Please select a file to upload')
                 return redirect('inventory:import_products')
             
-            # Simple validation for file extension
+            # Validate file extension
             if not file.name.endswith(('.xlsx', '.xls', '.csv')):
                 messages.error(request, 'Invalid file type. Please upload a .xlsx, .xls, or .csv file')
                 return redirect('inventory:import_products')
             
-            # Process the file (placeholder - implement actual import logic)
-            # For now, we'll just simulate a successful import
+            # Read the file based on its type
+            if file.name.endswith('.csv'):
+                # For CSV files
+                dataset = Dataset()
+                dataset.load(file.read().decode('utf-8'), format='csv')
+            else:
+                # For Excel files
+                df = pd.read_excel(file)
+                dataset = Dataset()
+                dataset.df = df
+            
+            # Check if the file has headers
+            has_headers = request.POST.get('has_headers') == 'on'
+            update_existing = request.POST.get('update_existing') == 'on'
+            
+            # Import the data
+            product_resource = ProductResource()
+            
+            if has_headers:
+                # If file has headers, let import_data handle column mapping
+                result = product_resource.import_data(
+                    dataset,
+                    dry_run=False,
+                    raise_errors=False,
+                    use_transactions=True,
+                    collect_failed_rows=True
+                )
+            else:
+                # If no headers, use the first row as data
+                result = product_resource.import_data(
+                    dataset,
+                    dry_run=False,
+                    raise_errors=False,
+                    use_transactions=True,
+                    collect_failed_rows=True
+                )
+            
+            # Prepare import results
             import_results = {
-                'success': True,
-                'imported': 5,  # Example count
-                'updated': 2,   # Example count
-                'skipped': 0,   # Example count
-                'errors': []    # List of error messages
+                'success': not result.has_errors(),
+                'imported': result.totals.get('new', 0),
+                'updated': result.totals.get('update', 0),
+                'skipped': result.totals.get('skip', 0),
+                'errors': []
             }
             
-            messages.success(request, f'Successfully imported {import_results["imported"]} products')
+            # Collect any errors
+            if result.has_errors():
+                for row in result.invalid_rows:
+                    import_results['errors'].append({
+                        'row': row.number,
+                        'message': row.error.message if hasattr(row.error, 'message') else str(row.error)
+                    })
+            
+            if import_results['success']:
+                messages.success(
+                    request,
+                    f'Successfully imported {import_results["imported"]} products. ' \
+                    f'Updated {import_results["updated"]} existing products.'
+                )
+            else:
+                messages.warning(
+                    request,
+                    f'Import completed with {len(import_results["errors"])} errors. ' \
+                    f'Imported: {import_results["imported"]}, Updated: {import_results["updated"]}.'
+                )
             
         except Exception as e:
+            import traceback
+            error_msg = str(e)
             import_results = {
                 'success': False,
-                'error': str(e)
+                'error': error_msg,
+                'traceback': traceback.format_exc()
             }
-            messages.error(request, f'Error importing products: {str(e)}')
+            messages.error(request, f'Error importing products: {error_msg}')
     
     return render(request, 'inventory/import_products.html', {
         'import_results': import_results

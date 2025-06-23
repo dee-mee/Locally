@@ -1,0 +1,36 @@
+name,sku,barcode,description,category,cost_price,selling_price,taxable,tax_rate,track_inventory,stock_quantity,reorder_level,status,weight,weight_unit,length,width,height,brand,alert_low_stock,allow_backorder,is_active,notes
+"Wireless Mouse","WM-1001","123456789012","Ergonomic wireless mouse with 2.4GHz connectivity","Electronics",12.99,24.99,TRUE,20.00,TRUE,100,10,"active",0.2,"kg",12.0,6.0,3.0,"TechBrand",TRUE,FALSE,TRUE,"Best selling wireless mouse"
+"Bluetooth Keyboard","KB-2001","234567890123","Slim Bluetooth keyboard with numeric keypad","Electronics",25.50,49.99,TRUE,20.00,TRUE,50,5,"active",0.5,"kg",35.0,15.0,1.5,"TechBrand",TRUE,TRUE,TRUE,"Low-profile keys"
+"HD Webcam","WC-3001","345678901234","1080p HD webcam with built-in microphone","Electronics",35.75,69.99,TRUE,20.00,TRUE,30,5,"active",0.25,"kg",8.0,2.5,2.5,"TechBrand",TRUE,FALSE,TRUE,"Plug and play"
+"Desk Lamp","DL-4001","456789012345","Adjustable LED desk lamp","Office",18.00,34.99,TRUE,20.00,TRUE,40,5,"active",1.2,"kg",35.0,15.0,15.0,"OfficePro",FALSE,FALSE,TRUE,"Multiple brightness levels"
+"Notebook Set","NB-5001","567890123456","Set of 3 A5 notebooks","Stationery",8.50,14.99,FALSE,0.00,TRUE,200,20,"active",0.8,"kg",21.0,15.0,2.0,"WriteWell",TRUE,FALSE,TRUE,"Ruled pages"
+
+# Instructions:
+# 1. Save this file as a .csv
+# 2. Go to Products > Import
+# 3. Select the file and click 'Upload'
+# 4. Map the columns if needed
+# 5. Review and confirm the import
+
+# Field Descriptions:
+# - name: Product name (required)
+# - sku: Stock Keeping Unit (unique, required)
+# - barcode: Product barcode (unique)
+# - description: Product description
+# - category: Existing category name (must match exactly)
+# - cost_price: Cost price (decimal)
+# - selling_price: Selling price (decimal)
+# - taxable: TRUE/FALSE
+# - tax_rate: Tax rate percentage (decimal)
+# - track_inventory: TRUE/FALSE
+# - stock_quantity: Current stock level (decimal)
+# - reorder_level: Reorder threshold (decimal)
+# - status: active/inactive/draft
+# - weight: Product weight (decimal)
+# - weight_unit: g/kg/lb/oz
+# - length/width/height: Dimensions in cm (decimal)
+# - brand: Brand name
+# - alert_low_stock: TRUE/FALSE
+# - allow_backorder: TRUE/FALSE
+# - is_active: TRUE/FALSE
+# - notes: Any additional notes
