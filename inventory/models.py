@@ -6,6 +6,47 @@ from django.utils.text import slugify
 from django.core.exceptions import ValidationError
 import os
 
+class Supplier(models.Model):
+    """Supplier model for product vendors"""
+    name = models.CharField(max_length=200)
+    contact_person = models.CharField(max_length=100, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+    website = models.URLField(blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['name']
+
+
+class ProductTag(models.Model):
+    """Tag model for product categorization"""
+    name = models.CharField(max_length=50, unique=True)
+    slug = models.SlugField(max_length=50, unique=True, blank=True)
+    description = models.TextField(blank=True, null=True)
+    color = models.CharField(max_length=7, default='#6c757d')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    class Meta:
+        ordering = ['name']
+
+
 class Category(models.Model):
     """Product category model"""
     name = models.CharField(max_length=100, unique=True)
@@ -84,6 +125,10 @@ class Product(models.Model):
         validators=[MinValueValidator(0)],
         help_text='Cost price per unit'
     )
+    taxable = models.BooleanField(
+        default=True,
+        help_text='Whether this product is taxable'
+    )
     selling_price = models.DecimalField(
         max_digits=10, 
         decimal_places=2, 
@@ -98,6 +143,10 @@ class Product(models.Model):
     )
     
     # Inventory
+    track_inventory = models.BooleanField(
+        default=True,
+        help_text='Track stock levels for this product'
+    )
     stock_quantity = models.DecimalField(
         max_digits=10, 
         decimal_places=2, 
@@ -122,6 +171,81 @@ class Product(models.Model):
         max_length=20, 
         choices=STATUS_CHOICES, 
         default=ACTIVE
+    )
+    alert_low_stock = models.BooleanField(
+        default=True,
+        help_text='Send alerts when stock is low'
+    )
+    allow_backorder = models.BooleanField(
+        default=False,
+        help_text='Allow ordering more than available stock'
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text='Whether this product is active and visible to customers'
+    )
+    
+    # Product Organization
+    brand = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text='Product brand or manufacturer'
+    )
+    supplier = models.ForeignKey(
+        'inventory.Supplier',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text='Primary supplier for this product'
+    )
+    tags = models.ManyToManyField(
+        'inventory.ProductTag',
+        blank=True,
+        help_text='Tags for categorizing products'
+    )
+    
+    # Shipping Information
+    WEIGHT_UNIT_CHOICES = [
+        ('g', 'Grams (g)'),
+        ('kg', 'Kilograms (kg)'),
+        ('lb', 'Pounds (lb)'),
+        ('oz', 'Ounces (oz)'),
+    ]
+    
+    weight = models.DecimalField(
+        max_digits=10,
+        decimal_places=3,
+        null=True,
+        blank=True,
+        help_text='Product weight'
+    )
+    weight_unit = models.CharField(
+        max_length=2,
+        choices=WEIGHT_UNIT_CHOICES,
+        default='kg',
+        help_text='Unit of measurement for weight'
+    )
+    length = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Length in centimeters'
+    )
+    width = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Width in centimeters'
+    )
+    height = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Height in centimeters'
     )
     
     # Additional Information

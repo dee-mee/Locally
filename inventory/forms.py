@@ -26,20 +26,45 @@ class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
         fields = [
+            # Basic Information
             'name', 'category', 'sku', 'barcode', 'description', 'unit', 
-            'cost_price', 'selling_price', 'tax_rate', 'stock_quantity',
-            'reorder_level', 'status', 'image', 'notes'
+            # Pricing
+            'cost_price', 'selling_price', 'taxable', 'tax_rate',
+            # Inventory
+            'track_inventory', 'stock_quantity', 'reorder_level', 'status',
+            # Product Organization
+            'brand', 'supplier', 'tags',
+            # Shipping
+            'weight', 'weight_unit', 'length', 'width', 'height',
+            # Additional
+            'image', 'notes', 'alert_low_stock', 'allow_backorder', 'is_active'
         ]
         widgets = {
+            # Text Areas
             'description': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
             'notes': forms.Textarea(attrs={'rows': 2, 'class': 'form-control'}),
+            # Number Inputs
             'cost_price': forms.NumberInput(attrs={'step': '0.01', 'min': '0', 'class': 'form-control'}),
             'selling_price': forms.NumberInput(attrs={'step': '0.01', 'min': '0', 'class': 'form-control'}),
             'tax_rate': forms.NumberInput(attrs={'step': '0.01', 'min': '0', 'max': '100', 'class': 'form-control'}),
             'stock_quantity': forms.NumberInput(attrs={'step': '0.01', 'min': '0', 'class': 'form-control'}),
             'reorder_level': forms.NumberInput(attrs={'step': '0.01', 'min': '0', 'class': 'form-control'}),
+            'weight': forms.NumberInput(attrs={'step': '0.001', 'min': '0', 'class': 'form-control'}),
+            'length': forms.NumberInput(attrs={'step': '0.01', 'min': '0', 'class': 'form-control'}),
+            'width': forms.NumberInput(attrs={'step': '0.01', 'min': '0', 'class': 'form-control'}),
+            'height': forms.NumberInput(attrs={'step': '0.01', 'min': '0', 'class': 'form-control'}),
+            # Checkboxes
+            'taxable': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'track_inventory': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'alert_low_stock': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'allow_backorder': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            # Selects
             'status': forms.Select(attrs={'class': 'form-select'}),
             'unit': forms.Select(attrs={'class': 'form-select'}),
+            'supplier': forms.Select(attrs={'class': 'form-select'}),
+            'weight_unit': forms.Select(attrs={'class': 'form-select'}),
+            'tags': forms.SelectMultiple(attrs={'class': 'form-select'}),
         }
     
     def __init__(self, *args, **kwargs):
