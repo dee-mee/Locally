@@ -1,4 +1,4 @@
-{% extends 'inventory/base.html' %}
+{% extends 'base.html' %}
 {% load static crispy_forms_tags %}
 
 {% block page_title %}
@@ -22,16 +22,31 @@
 </a>
 {% endblock %}
 
-{% block page_content %}
-<div class="row
-    <div class="col-lg-8">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Product Information</h5>
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4>{% if form.instance.pk %}Edit{% else %}Add New{% endif %} Product</h4>
+                <a href="{% if form.instance.pk %}{% url 'inventory:product_detail' form.instance.pk %}{% else %}{% url 'inventory:product_list' %}{% endif %}" 
+                   class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i> Back to {% if form.instance.pk %}Product{% else %}Products{% endif %}
+                </a>
             </div>
-            <div class="card-body">
-                <form method="post" enctype="multipart/form-data" id="productForm">
-                    {% csrf_token %}
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card product-form-card mb-4">
+                        <div class="product-form-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-box me-2"></i>Product Information
+                            </h5>
+                        </div>
+                        <div class="product-form-body">
+                            <form method="post" enctype="multipart/form-data" id="productForm">
+                                {% csrf_token %}
                     
                     <div class="row">
                         <div class="col-md-8">
@@ -134,25 +149,29 @@
                         {% endif %}
                     </div>
                     
-                    <div class="d-flex justify-content-between mt-4">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-1"></i> Save Product
-                        </button>
-                        <a href="{% if form.instance.pk %}{% url 'inventory:product_detail' form.instance.pk %}{% else %}{% url 'inventory:product_list' %}{% endif %}" 
-                           class="btn btn-outline-secondary">
-                            <i class="fas fa-times me-1"></i> Cancel
-                        </a>
+                                <div class="d-flex justify-content-between mt-4">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i> Save Product
+                                    </button>
+                                    <a href="{% if form.instance.pk %}{% url 'inventory:product_detail' form.instance.pk %}{% else %}{% url 'inventory:product_list' %}{% endif %}" 
+                                       class="btn btn-outline-light">
+                                        <i class="fas fa-times me-1"></i> Cancel
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </form>
+                </div>
             </div>
-        </div>
-    </div>
-    
-    <div class="col-lg-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Additional Information</h5>
-            </div>
+            
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card product-form-card">
+                        <div class="product-form-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>Additional Information
+                            </h5>
+                        </div>
             <div class="card-body">
                 <div class="mb-3">
                     <h6 class="text-muted mb-3">Inventory Tracking</h6>
@@ -200,42 +219,287 @@
         </div>
         
         {% if form.instance.pk %}
-        <div class="card mt-4">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Product Stats</h5>
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card product-form-card">
+                    <div class="product-form-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-line me-2"></i>Product Stats
+                        </h5>
+                    </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0">
+                                <li class="d-flex justify-content-between py-2 border-bottom">
+                                    <span>Created</span>
+                                    <span class="text-muted">{{ form.instance.created_at|date:"M d, Y" }}</span>
+                                </li>
+                                <li class="d-flex justify-content-between py-2 border-bottom">
+                                    <span>Last Updated</span>
+                                    <span class="text-muted">
+                                        {% if form.instance.updated_at %}
+                                            {{ form.instance.updated_at|timesince }} ago
+                                        {% else %}
+                                            Never
+                                        {% endif %}
+                                    </span>
+                                </li>
+                                <li class="d-flex justify-content-between py-2 border-bottom">
+                                    <span>Created By</span>
+                                    <span class="text-muted">
+                                        {{ form.instance.created_by.get_full_name|default:form.instance.created_by.username }}
+                                    </span>
+                                </li>
+                                <li class="d-flex justify-content-between py-2">
+                                    <span>Total Stock Value</span>
+                                    <span class="fw-medium">${{ form.instance.total_value|default:0|floatformat:2 }}</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <ul class="list-unstyled mb-0">
-                    <li class="d-flex justify-content-between py-2 border-bottom">
-                        <span>Created</span>
-                        <span class="text-muted">{{ form.instance.created_at|date:"M d, Y" }}</span>
-                    </li>
-                    <li class="d-flex justify-content-between py-2 border-bottom">
-                        <span>Last Updated</span>
-                        <span class="text-muted">
-                            {% if form.instance.updated_at %}
-                                {{ form.instance.updated_at|timesince }} ago
-                            {% else %}
-                                Never
-                            {% endif %}
-                        </span>
-                    </li>
-                    <li class="d-flex justify-content-between py-2 border-bottom">
-                        <span>Created By</span>
-                        <span class="text-muted">
-                            {{ form.instance.created_by.get_full_name|default:form.instance.created_by.username }}
-                        </span>
-                    </li>
-                    <li class="d-flex justify-content-between py-2">
-                        <span>Total Stock Value</span>
-                        <span class="fw-medium">${{ form.instance.total_value|default:0|floatformat:2 }}</span>
-                    </li>
-                </ul>
-            </div>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    /* Hide footer on this page */
+    footer {
+        display: none !important;
+    }
+    
+    .main-content {
+        background: transparent;
+    }
+</style>
+<style>
+    /* Sidebar Styles - Matched to Dashboard */
+    .dashboard-wrapper {
+        display: flex;
+        min-height: calc(100vh - 56px);
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .sidebar {
+        width: 260px;
+        background: linear-gradient(135deg, #2a266d 60%, #20105a 100%);
+        padding: 2rem 1.5rem 1rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 56px; /* Height of the navbar */
+        left: 0;
+        bottom: 0;
+        z-index: 1029;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        overflow-y: auto;
+    }
+    
+    .sidebar .logo {
+        font-size: 1.6rem;
+        font-weight: 700;
+        margin-bottom: 2.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        color: #fff;
+        text-decoration: none;
+    }
+    
+    .sidebar .logo i {
+        color: #ffd700;
+        font-size: 2rem;
+    }
+    
+    .sidebar .menu {
+        flex: 1;
+        overflow-y: auto;
+    }
+    
+    .sidebar .menu ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .sidebar .menu li {
+        margin-bottom: 1.2rem;
+        position: relative;
+    }
+    
+    .sidebar .menu a {
+        color: #b2b6d9;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        border-radius: 6px;
+        padding: 0.55rem 1rem;
+        transition: background 0.2s, color 0.2s;
+    }
+    
+    .sidebar .menu a.active,
+    .sidebar .menu a:hover {
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+        transform: translateX(5px);
+    }
+    
+    .sidebar .menu a:hover i {
+        color: #ffd700;
+    }
+    
+    .sidebar .menu a.active {
+        background: linear-gradient(90deg, rgba(108, 92, 231, 0.2) 0%, rgba(108, 92, 231, 0.1) 100%);
+        color: #fff;
+        border-left: 3px solid #6c5ce7;
+        padding-left: 1.1rem;
+    }
+    
+    .sidebar .menu a.active i {
+        color: #6c5ce7;
+    }
+    
+    .main-content {
+        flex: 1;
+        padding: 2rem;
+        overflow-y: auto;
+        background: #f5f7fb;
+    }
+    
+    @media (max-width: 992px) {
+        .sidebar {
+            position: fixed;
+            left: -300px;
+            top: 0;
+            bottom: 0;
+            z-index: 1050;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar.active {
+            left: 0;
+        }
+        
+        .main-content {
+            margin-left: 0;
+        }
+    }
+</style>
+<style>
+    .product-form-card {
+        background: linear-gradient(120deg, #2a266d 60%, #4b33a8 100%);
+        border-radius: 15px;
+        box-shadow: 0 4px 24px rgba(75,51,168,0.25);
+        border: none;
+        margin-bottom: 1.5rem;
+    }
+    
+    .product-form-header {
+        background: rgba(0, 0, 0, 0.1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1.25rem 1.5rem;
+        border-radius: 15px 15px 0 0;
+    }
+    
+    .product-form-body {
+        padding: 1.5rem;
+    }
+    
+    .form-label {
+        color: #e0e0ff;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-control, .form-select {
+        background-color: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+        border-radius: 8px;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-color: #6c5ce7;
+        color: #fff;
+        box-shadow: 0 0 0 0.25rem rgba(108, 92, 231, 0.25);
+    }
+    
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+    
+    .form-check-input {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+    
+    .form-check-input:checked {
+        background-color: #6c5ce7;
+        border-color: #6c5ce7;
+    }
+    
+    .form-check-label {
+        color: #e0e0ff;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+        border: none;
+        padding: 0.6rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+    }
+    
+    .btn-outline-light {
+        border-color: rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .btn-outline-light:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: #fff;
+    }
+    
+    .custom-file-label::after {
+        background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+        border: none;
+        color: #fff;
+    }
+    
+    .custom-file-label {
+        background-color: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .custom-file-input:focus ~ .custom-file-label {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-color: #6c5ce7;
+        box-shadow: 0 0 0 0.25rem rgba(108, 92, 231, 0.25);
+    }
+    
+    .text-muted {
+        color: #b2b6d9 !important;
+    }
+    
+    .border-bottom {
+        border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+</style>
 {% endblock %}
 
 {% block extra_js %}

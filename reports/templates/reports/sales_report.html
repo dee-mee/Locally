@@ -1,98 +1,276 @@
-{% extends 'base.html' %}
-{% load static %}
+{% extends 'reports/base_report.html' %}
+{% load static humanize %}
 
-{% block title %}Sales Report{% endblock %}
+{% block title %}Sales Report - Mini Inventory{% endblock %}
 
-{% block content %}
-<div-fluid">
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Sales Report</h1>
-        <div>
-            <a href="?export=csv" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
-                <i class="fas fa-download fa-sm text-white-50"></i> Export to CSV
-            </a>
+{% block report_title %}Sales Report{% endblock %}
+
+{% block report_actions %}
+    <a href="?export=csv" class="btn btn-outline-light" data-bs-toggle="tooltip" title="Export to CSV">
+        <i class="fas fa-file-csv me-1"></i> Export
+    </a>
+    <a href="{% url 'reports:sales_report' %}" class="btn btn-outline-light" data-bs-toggle="tooltip" title="Reset Filters">
+        <i class="fas fa-sync-alt me-1"></i> Reset
+    </a>
+{% endblock %}
+
+{% block report_content %}
+    <!-- Filter Card -->
+    <div class="report-card mb-4">
+        <div class="report-card-header">
+            <h2 class="report-card-title">
+                <i class="fas fa-filter me-2"></i>Filter Report
+            </h2>
         </div>
-    </div>
-
-    <!-- Filter Form -->
-    <div class="card shadow mb-4">
-        <div class="py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Filter Report</h6>
-        </div>
-        <div>
-            <form method="get" class="form-inline">
-                <div class="form-group mr-3 mb-2">
-                    <label for="date_from" class="mr-2">From:</label>
-                    <input type="date" class="form-control" id="date_from" name="date_from" 
-                           value="{{ date_from|date:'Y-m-d' }}">
+        <div class="report-card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="date_from" class="form-label">From Date</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
+                        <input type="date" class="form-control" id="date_from" name="date_from" 
+                               value="{{ date_from|date:'Y-m-d' }}" required>
+                    </div>
                 </div>
-                <div class="form-group mr-3 mb-2">
-                    <label for="date_to" class="mr-2">To:</label>
-                    <input type="date" class="form-control" id="date_to" name="date_to" 
-                           value="{{ date_to|date:'Y-m-d' }}">
+                <div class="col-md-4">
+                    <label for="date_to" class="form-label">To Date</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
+                        <input type="date" class="form-control" id="date_to" name="date_to" 
+                               value="{{ date_to|date:'Y-m-d' }}" required>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-primary mb-2">Filter</button>
-                <a href="{% url 'reports:sales_report' %}" class="btn btn-secondary mb-2 ml-2">Reset</a>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-2"></i>Apply Filters
+                    </button>
+                </div>
             </form>
         </div>
     </div>
 
-    <!-- Sales Table -->
-    <div class="card shadow mb-4">
-        <div class="py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Sales Details</h6>
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="report-card h-100">
+                <div class="report-card-body text-center">
+                    <h6 class="text-uppercase text-muted mb-2">Total Sales</h6>
+                    <h3 class="mb-0">${{ total_sales|default:0|intcomma }}</h3>
+                    <p class="text-muted mb-0">{{ sales|length }} transactions</p>
+                </div>
+            </div>
         </div>
-        <div>
+        <div class="col-md-4">
+            <div class="report-card h-100">
+                <div class="report-card-body text-center">
+                    <h6 class="text-uppercase text-muted mb-2">Avg. Order Value</h6>
+                    <h3 class="mb-0">${{ avg_order_value|default:0|floatformat:2 }}</h3>
+                    <p class="text-muted mb-0">per transaction</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="report-card h-100">
+                <div class="report-card-body text-center">
+                    <h6 class="text-uppercase text-muted mb-2">Items Sold</h6>
+                    <h3 class="mb-0">{{ total_items|default:0|intcomma }}</h3>
+                    <p class="text-muted mb-0">units</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sales Table -->
+    <div class="report-card">
+        <div class="report-card-header d-flex justify-content-between align-items-center">
+            <h2 class="report-card-title mb-0">
+                <i class="fas fa-list me-2"></i>Sales Details
+            </h2>
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-download me-1"></i> Export
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                    <li><a class="dropdown-item" href="?export=csv">CSV</a></li>
+                    <li><a class="dropdown-item" href="#" id="exportPdf">PDF</a></li>
+                    <li><a class="dropdown-item" href="#" id="exportExcel">Excel</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="report-card-body p-0">
             <div class="table-responsive">
-                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <table class="table table-hover mb-0" id="dataTable">
                     <thead>
                         <tr>
-                            <th>Sale #</th>
-                            <th>Date</th>
+                            <th>#</th>
+                            <th>Date & Time</th>
                             <th>Customer</th>
-                            <th>Items</th>
-                            <th>Total</th>
+                            <th class="text-center">Items</th>
+                            <th class="text-end">Total</th>
                             <th>Payment</th>
-                            <th>Actions</th>
+                            <th class="text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for sale in sales %}
                         <tr>
-                            <td>{{ sale.invoice_number }}</td>
+                            <td class="fw-bold">#{{ sale.invoice_number }}</td>
                             <td>{{ sale.sale_date|date:"M d, Y H:i" }}</td>
-                            <td>{{ sale.customer.name|default:"Walk-in Customer" }}</td>
-                            <td>{{ sale.items.count }}</td>
-                            <td>${{ sale.total|floatformat:2 }}</td>
-                            <td>{{ sale.get_payment_method_display }}</td>
                             <td>
-                                <a href="{% url 'pos:sale_detail' sale.id %}" class="btn btn-sm btn-info">
-                                    <i class="fas fa-eye"></i> View
-                                </a>
+                                {% if sale.customer %}
+                                    <a href="{% url 'customers:customer_detail' sale.customer.id %}" class="text-decoration-none text-white">
+                                        {{ sale.customer.name|truncatechars:20 }}
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">Walk-in Customer</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">{{ sale.items.count }}</td>
+                            <td class="text-end fw-bold">${{ sale.total|floatformat:2 }}</td>
+                            <td>
+                                <span class="badge {% if sale.payment_method == 'cash' %}bg-success{% else %}bg-primary{% endif %}">
+                                    {{ sale.get_payment_method_display }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{% url 'pos:sale_detail' sale.id %}" class="btn btn-sm btn-outline-light" 
+                                       data-bs-toggle="tooltip" title="View Details">
+                                        <i class="far fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'pos:sale_detail' sale.id %}?print=true" target="_blank" 
+                                       class="btn btn-sm btn-outline-light" data-bs-toggle="tooltip" title="Print Invoice">
+                                        <i class="fas fa-print"></i>
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="7" class="text-center">No sales found for the selected period.</td>
+                            <td colspan="7" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                                    <p class="mb-0">No sales found for the selected period.</p>
+                                </div>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
+                    {% if sales %}
+                    <tfoot>
+                        <tr class="table-active">
+                            <td colspan="3" class="text-end fw-bold">Total:</td>
+                            <td class="text-center fw-bold">{{ total_items|default:0|intcomma }}</td>
+                            <td class="text-end fw-bold">${{ total_sales|default:0|floatformat:2 }}</td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                    {% endif %}
                 </table>
             </div>
         </div>
     </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
+{{ block.super }}
 <script>
-    $(document).ready(function() {
-        // Initialize DataTables
-        $('#dataTable').DataTable({
-            "order": [[1, "desc"]], // Sort by date descending by default
-            "pageLength": 25
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize date pickers with default date range (last 30 days)
+    const today = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    
+    // Format dates as YYYY-MM-DD
+    function formatDate(date) {
+        const d = new Date(date);
+        let month = '' + (d.getMonth() + 1);
+        let day = '' + d.getDate();
+        const year = d.getFullYear();
+
+        if (month.length < 2) month = '0' + month;
+        if (day.length < 2) day = '0' + day;
+
+        return [year, month, day].join('-');
+    }
+    
+    // Set default dates if not already set
+    const dateFrom = document.getElementById('date_from');
+    const dateTo = document.getElementById('date_to');
+    
+    if (dateFrom && !dateFrom.value) {
+        dateFrom.value = formatDate(thirtyDaysAgo);
+    }
+    if (dateTo && !dateTo.value) {
+        dateTo.value = formatDate(today);
+    }
+    
+    // Validate date range
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const fromDate = new Date(dateFrom.value);
+            const toDate = new Date(dateTo.value);
+            
+            if (fromDate > toDate) {
+                e.preventDefault();
+                alert('End date must be after start date');
+                return false;
+            }
+            
+            // Optional: Limit date range to 1 year
+            const diffTime = Math.abs(toDate - fromDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays > 365) {
+                e.preventDefault();
+                alert('Date range cannot exceed 1 year');
+                return false;
+            }
         });
+    }
+    
+    // Initialize DataTables with custom options
+    if ($.fn.DataTable && $('#dataTable').length) {
+        $('#dataTable').DataTable({
+            "order": [[1, "desc"]],
+            "pageLength": 25,
+            "language": {
+                "search": "<i class='fas fa-search'></i>",
+                "searchPlaceholder": "Search sales...",
+                "paginate": {
+                    "previous": "<i class='fas fa-chevron-left'></i>",
+                    "next": "<i class='fas fa-chevron-right'></i>"
+                },
+                "info": "Showing _START_ to _END_ of _TOTAL_ sales",
+                "lengthMenu": "Show _MENU_ sales per page",
+                "emptyTable": "No sales data available"
+            },
+            "dom": "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                   "<'row'<'col-sm-12'tr>>" +
+                   "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            "drawCallback": function() {
+                // Reinitialize tooltips after table redraw
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            }
+        });
+    }
+    
+    // Export buttons functionality
+    document.getElementById('exportPdf')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        // Add PDF export functionality here
+        alert('PDF export functionality will be implemented here');
     });
+    
+    document.getElementById('exportExcel')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        // Add Excel export functionality here
+        alert('Excel export functionality will be implemented here');
+    });
+});
 </script>
 {% endblock %}

@@ -1,108 +1,454 @@
-{% extends 'inventory/base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 
-{% block page_title %}Import Products{% endblock %}
+{% block title %}Import Products - Mini Inventory{% endblock %}
 
-{% block breadcrumb_items %}
-<li class="breadcrumb-item"><a href="{% url 'inventory:product_list' %}">Products</a></li>
-<li class="breadcrumb-item active" aria-current="page">Import Products</li>
+{% block extra_css %}
+{{ block.super }}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body {
+    background: linear-gradient(135deg, #20105a 0%, #2a266d 100%) !important;
+    font-family: 'Inter', sans-serif;
+    color: #fff;
+}
+.page-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #20105a 0%, #2a266d 100%) !important;
+}
+
+.dashboard-wrapper {
+    display: flex;
+    flex: 1;
+    width: 100%;
+}
+
+.footer {
+    margin-top: auto;
+    background: #20105a;
+    color: #fff;
+    padding: 1rem 0;
+}
+.sidebar {
+    width: 260px;
+    background: linear-gradient(135deg, #2a266d 60%, #20105a 100%);
+    padding: 2rem 1.5rem 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    border-radius: 20px 0 0 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+.sidebar .logo {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 2.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    color: #fff;
+}
+.sidebar .logo i {
+    color: #ffd700;
+    font-size: 2rem;
+}
+.sidebar .menu {
+    flex: 1;
+}
+.sidebar .menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.sidebar .menu li {
+    margin-bottom: 1.2rem;
+}
+.sidebar .menu a {
+    color: #b2b6d9;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    border-radius: 6px;
+    padding: 0.55rem 1rem;
+    transition: background 0.2s, color 0.2s;
+}
+.sidebar .menu a.active, .sidebar .menu a:hover {
+    background: rgba(255,255,255,0.07);
+    color: #fff;
+}
+.sidebar .menu a i {
+    width: 20px;
+    text-align: center;
+}
+
+.main-content {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+    .file-upload-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .import-card {
+        background: linear-gradient(120deg, #2a266d 60%, #4b33a8 100%);
+        border-radius: 15px;
+        box-shadow: 0 4px 24px rgba(75,51,168,0.25);
+        border: none;
+    }
+    
+    .import-header {
+        background: rgba(0, 0, 0, 0.1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1.25rem 1.5rem;
+    }
+    
+    .import-body {
+        padding: 2rem;
+    }
+    
+    .file-upload-box {
+        border: 2px dashed rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        padding: 2rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .file-upload-box:hover {
+        border-color: rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.03);
+    }
+    
+    .file-upload-icon {
+        font-size: 2.5rem;
+        color: #ffd700;
+        margin-bottom: 1rem;
+    }
+    
+    .file-input-label {
+        cursor: pointer;
+        display: inline-block;
+        padding: 0.5rem 1.5rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+    
+    .file-input-label:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .file-name {
+        margin-top: 1rem;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+    }
+    
+    .form-check-input:checked {
+        background-color: #6c5ce7;
+        border-color: #6c5ce7;
+    }
+    
+    .btn-import {
+        background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+        border: none;
+        padding: 0.6rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-import:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+    }
+    
+    .btn-outline-light {
+        border-color: rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .btn-outline-light:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: #fff;
+    }
+    
+    .alert {
+        border: none;
+        border-radius: 10px;
+    }
+    
+    .alert-info {
+        background: rgba(45, 170, 220, 0.1);
+        color: #7ed6df;
+        border-left: 4px solid #22a6b3;
+    }
+    
+    .alert-success {
+        background: rgba(46, 213, 115, 0.1);
+        color: #7bed9f;
+        border-left: 4px solid #2ecc71;
+    }
+    
+    .alert-warning {
+        background: rgba(255, 165, 2, 0.1);
+        color: #ffbe76;
+        border-left: 4px solid #f39c12;
+    }
+    
+    .alert-danger {
+        background: rgba(255, 71, 87, 0.1);
+        color: #ff7979;
+        border-left: 4px solid #eb4d4b;
+    }
+</style>
 {% endblock %}
 
-{% block page_content %}
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Import Products</h5>
+{% block content %}
+<div class="page-wrapper">
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-crown"></i>
+                SMART POS
             </div>
-            <div class="card-body">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    Download our <a href="{% static 'inventory/templates/product_import_template.xlsx' %}">import template</a>
-                    to ensure your data is formatted correctly.
-                </div>
-                
-                <form method="post" enctype="multipart/form-data" class="mt-4">
-                    {% csrf_token %}
-                    
-                    <div class="mb-3">
-                        <label for="file" class="form-label">Select File</label>
-                        <input type="file" class="form-control" id="file" name="file" accept=".xlsx, .xls, .csv" required>
-                        <div class="form-text">Supported formats: .xlsx, .xls, .csv</div>
+            <nav class="menu">
+                <ul>
+                    <li><a href="{% url 'frontend:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                        <i class="fas fa-th-large"></i> Dashboard
+                    </a></li>
+                    <li><a href="{% url 'pos:sale_list' %}" class="{% if request.resolver_match.app_name == 'pos' and request.resolver_match.url_name in 'sale_list sale_detail sale_create' %}active{% endif %}">
+                        <i class="fas fa-receipt"></i> Sales
+                    </a></li>
+                    <li><a href="{% url 'inventory:product_list' %}" class="{% if request.resolver_match.app_name == 'inventory' and request.resolver_match.url_name in 'product_list product_detail product_add' %}active{% endif %}">
+                        <i class="fas fa-box"></i> Products
+                    </a></li>
+                    <li><a href="{% url 'customers:customer_list' %}" class="{% if request.resolver_match.app_name == 'customers' and request.resolver_match.url_name in 'customer_list customer_detail customer_create' %}active{% endif %}">
+                        <i class="fas fa-users"></i> Customers
+                    </a></li>
+                    <li><a href="{% url 'reports:report_list' %}" class="{% if request.resolver_match.app_name == 'reports' %}active{% endif %}">
+                        <i class="fas fa-chart-bar"></i> Reports
+                    </a></li>
+                    <li class="mt-4"><a href="#">
+                        <i class="fas fa-cog"></i> Settings
+                    </a></li>
+                    <li><a href="#">
+                        <i class="fas fa-question-circle"></i> Help & Support
+                    </a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4>Import Products</h4>
+                <a href="{% url 'inventory:product_list' %}" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Products
+                </a>
+            </div>
+
+            <div class="file-upload-container">
+                <div class="card import-card">
+                    <div class="import-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-file-import me-2"></i>Import Products
+                        </h5>
                     </div>
-                    
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" id="has_headers" name="has_headers" checked>
-                        <label class="form-check-label" for="has_headers">
-                            First row contains headers
-                        </label>
-                    </div>
-                    
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" id="update_existing" name="update_existing">
-                        <label class="form-check-label" for="update_existing">
-                            Update existing products with matching SKU
-                        </label>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-upload me-2"></i>Upload and Import
-                    </button>
-                    <a href="{% url 'inventory:product_list' %}" class="btn btn-outline-secondary">
-                        <i class="fas fa-times me-2"></i>Cancel
-                    </a>
-                </form>
-                
-                {% if import_results %}
-                <div class="mt-4">
-                    <h5>Import Results</h5>
-                    <div class="alert alert-{{ import_results.success|yesno:'success,danger' }}">
-                        {% if import_results.success %}
-                            <i class="fas fa-check-circle me-2"></i>
-                            Successfully imported {{ import_results.imported }} products.
-                            {% if import_results.updated %}
-                                <br>Updated {{ import_results.updated }} existing products.
+                    <div class="import-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Download our <a href="{% static 'inventory/templates/product_import_template.xlsx' %}" class="text-warning">import template</a>
+                            to ensure your data is formatted correctly.
+                        </div>
+                        
+                        <form method="post" enctype="multipart/form-data" id="importForm">
+                            {% csrf_token %}
+                            
+                            <div class="file-upload-box" id="dropZone">
+                                <div class="file-upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <h5>Drag & drop your file here</h5>
+                                <p class="text-muted mb-3">or</p>
+                                <label for="file" class="file-input-label">
+                                    <i class="fas fa-folder-open me-2"></i>Browse Files
+                                </label>
+                                <input type="file" class="d-none" id="file" name="file" accept=".xlsx, .xls, .csv" required>
+                                <div class="file-name" id="fileName">No file selected</div>
+                            </div>
+                            
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="has_headers" name="has_headers" checked>
+                                        <label class="form-check-label" for="has_headers">
+                                            First row contains headers
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="update_existing" name="update_existing">
+                                        <label class="form-check-label" for="update_existing">
+                                            Update existing products
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{% url 'inventory:product_list' %}" class="btn btn-outline-light">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </a>
+                                <button type="submit" class="btn btn-import">
+                                    <i class="fas fa-upload me-2"></i>Upload and Import
+                                </button>
+                            </div>
+                        </form>
+                        
+                        {% if import_results %}
+                        <div class="mt-5">
+                            <h5 class="mb-3">Import Results</h5>
+                            <div class="alert alert-{{ import_results.success|yesno:'success,danger' }}">
+                                {% if import_results.success %}
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    <strong>Import Successful!</strong>
+                                    <p class="mb-0 mt-2">
+                                        Successfully imported {{ import_results.imported }} products.
+                                        {% if import_results.updated %}
+                                            <br>Updated {{ import_results.updated }} existing products.
+                                        {% endif %}
+                                        {% if import_results.skipped %}
+                                            <br>Skipped {{ import_results.skipped }} rows (duplicate SKUs).
+                                        {% endif %}
+                                    </p>
+                                {% else %}
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Import Failed</strong>
+                                    <p class="mb-0 mt-2">{{ import_results.error }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            {% if import_results.errors %}
+                            <div class="alert alert-warning">
+                                <h6><i class="fas fa-exclamation-triangle me-2"></i>Errors found:</h6>
+                                <ul class="mb-0 mt-2">
+                                    {% for error in import_results.errors %}
+                                    <li>Row {{ error.row }}: {{ error.message }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
                             {% endif %}
-                            {% if import_results.skipped %}
-                                <br>Skipped {{ import_results.skipped }} rows (duplicate SKUs).
-                            {% endif %}
-                        {% else %}
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            Error during import: {{ import_results.error }}
+                        </div>
                         {% endif %}
                     </div>
-                    
-                    {% if import_results.errors %}
-                    <div class="alert alert-warning">
-                        <h6>Errors found in the following rows:</h6>
-                        <ul class="mb-0">
-                            {% for error in import_results.errors %}
-                            <li>Row {{ error.row }}: {{ error.message }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    {% endif %}
                 </div>
-                {% endif %}
             </div>
-        </div>
+        </main>
     </div>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container text-center">
+            <p class="mb-0">
+                &copy; {% now "Y" %} Mini Inventory System. All rights reserved.
+            </p>
+        </div>
+    </footer>
 </div>
 {% endblock %}
 
 {% block extra_js %}
+{{ block.super }}
 <script>
-    // Client-side validation for file type
-    document.querySelector('form').addEventListener('submit', function(e) {
-        const fileInput = document.getElementById('file');
-        const filePath = fileInput.value;
-        const allowedExtensions = /(\.|\/)(xlsx?|csv)$/i;
-        
-        if (!allowedExtensions.exec(filePath)) {
-            e.preventDefault();
-            alert('Please upload file having extensions .xlsx, .xls, or .csv only.');
-            fileInput.value = '';
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('file');
+    const fileName = document.getElementById('fileName');
+    const dropZone = document.getElementById('dropZone');
+    const form = document.getElementById('importForm');
+    const allowedExtensions = /(\.|\/)(xlsx?|csv)$/i;
+    
+    // Handle file selection
+    fileInput.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            fileName.textContent = this.files[0].name;
+        } else {
+            fileName.textContent = 'No file selected';
         }
     });
+    
+    // Handle drag and drop
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+    });
+    
+    function highlight() {
+        dropZone.style.borderColor = '#6c5ce7';
+        dropZone.style.backgroundColor = 'rgba(108, 92, 231, 0.1)';
+    }
+    
+    function unhighlight() {
+        dropZone.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+        dropZone.style.backgroundColor = 'transparent';
+    }
+    
+    dropZone.addEventListener('drop', handleDrop, false);
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length) {
+            fileInput.files = files;
+            fileName.textContent = files[0].name;
+        }
+    }
+    
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        if (fileInput.files.length === 0) {
+            e.preventDefault();
+            alert('Please select a file to upload.');
+            return;
+        }
+        
+        const filePath = fileInput.value;
+        if (!allowedExtensions.exec(filePath)) {
+            e.preventDefault();
+            alert('Please upload a file with .xlsx, .xls, or .csv extension.');
+            fileInput.value = '';
+            fileName.textContent = 'No file selected';
+        }
+    });
+    
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
 </script>
 {% endblock %}

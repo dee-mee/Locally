@@ -16,5 +16,8 @@ urlpatterns = [
     path('logout/', views.custom_logout, name='logout'),
     path('logout/confirm/', views.LogoutView.as_view(), name='logout_confirm'),
     
+    # Dashboard API endpoints
+    path('api/dashboard-stats/', views.dashboard_stats, name='dashboard_stats'),
+    
     # Add other frontend URLs here
 ]

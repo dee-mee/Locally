@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.http import JsonResponse
 from django.contrib.auth import logout as auth_logout, login as auth_login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
@@ -154,3 +155,51 @@ def dashboard(request):
     }
 
     return render(request, 'frontend/dashboard.html', context)
+
+@login_required
+def dashboard_stats(request):
+    """
+    API endpoint to get dashboard statistics for AJAX updates
+    """
+    from django.db.models import Sum, Count, F
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    today = timezone.now().date()
+    last_week = today - timedelta(days=7)
+    
+    # Calculate statistics
+    total_products = Product.objects.count()
+    low_stock_count = Product.objects.filter(stock_quantity__lte=F('reorder_level')).count()
+    
+    # Calculate total revenue (all time)
+    total_revenue = float(Sale.objects.aggregate(total=Sum('total'))['total'] or 0)
+    
+    # Calculate weekly sales
+    weekly_sales = float(Sale.objects.filter(
+        created_at__date__gte=last_week
+    ).aggregate(total=Sum('total'))['total'] or 0)
+    
+    # Get total orders and pending orders
+    total_orders = Sale.objects.count()
+    pending_orders = Sale.objects.filter(status='pending').count()
+    
+    # Get total customers and new customers this month
+    from customers.models import Customer
+    total_customers = Customer.objects.count()
+    
+    first_day_of_month = today.replace(day=1)
+    new_customers_this_month = Customer.objects.filter(
+        date_joined__date__gte=first_day_of_month
+    ).count()
+    
+    return JsonResponse({
+        'total_revenue': total_revenue,
+        'weekly_sales': weekly_sales,
+        'total_orders': total_orders,
+        'pending_orders': pending_orders,
+        'total_products': total_products,
+        'low_stock_count': low_stock_count,
+        'total_customers': total_customers,
+        'new_customers_this_month': new_customers_this_month,
+    })
