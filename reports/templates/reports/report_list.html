@@ -1,71 +1,278 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Reports - Dashboard{% endblock %}
+{% block title %}Reports - Mini Inventory{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body {
+    background: linear-gradient(135deg, #20105a 0%, #2a266d 100%) !important;
+    font-family: 'Inter', sans-serif;
+    color: #fff;
+}
+.page-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #20105a 0%, #2a266d 100%) !important;
+}
+
+.dashboard-wrapper {
+    display: flex;
+    flex: 1;
+    width: 100%;
+}
+
+.footer {
+    margin-top: auto;
+    background: #20105a;
+    color: #fff;
+    padding: 1rem 0;
+}
+.sidebar {
+    width: 260px;
+    background: linear-gradient(135deg, #2a266d 60%, #20105a 100%);
+    padding: 2rem 1.5rem 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    border-radius: 20px 0 0 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+.sidebar .logo {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 2.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    color: #fff;
+}
+.sidebar .logo i {
+    color: #ffd700;
+    font-size: 2rem;
+}
+.sidebar .menu {
+    flex: 1;
+}
+.sidebar .menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.sidebar .menu li {
+    margin-bottom: 1.2rem;
+}
+.sidebar .menu a {
+    color: #b2b6d9;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    border-radius: 6px;
+    padding: 0.55rem 1rem;
+    transition: background 0.2s, color 0.2s;
+}
+.sidebar .menu a.active, .sidebar .menu a:hover {
+    background: rgba(255,255,255,0.07);
+    color: #fff;
+}
+.sidebar .menu a i {
+    width: 20px;
+    text-align: center;
+}
+
+.main-content {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.card {
+    background: linear-gradient(120deg, #2a266d 60%, #4b33a8 100%);
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 24px rgba(75,51,168,0.13);
+    color: #fff;
+    margin-bottom: 1.5rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 28px rgba(75,51,168,0.25);
+}
+
+.card-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    color: #fff;
+    opacity: 0.9;
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #fff;
+}
+
+.card-text {
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.btn-outline-light {
+    border-color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.9);
+    transition: all 0.3s ease;
+}
+
+.btn-outline-light:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #fff;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        left: -260px;
+        top: 0;
+        bottom: 0;
+        z-index: 1000;
+        transition: left 0.3s ease;
+    }
+    .sidebar.show {
+        left: 0;
+    }
+    .main-content {
+        margin-left: 0;
+        padding: 1rem;
+    }
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Reports</h1>
+<div class="page-wrapper">
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-crown"></i>
+                SMART POS
+            </div>
+            <nav class="menu">
+                <ul>
+                    <li><a href="{% url 'frontend:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                        <i class="fas fa-th-large"></i> Dashboard
+                    </a></li>
+                    <li><a href="{% url 'pos:sale_list' %}" class="{% if request.resolver_match.app_name == 'pos' and request.resolver_match.url_name in 'sale_list sale_detail sale_create' %}active{% endif %}">
+                        <i class="fas fa-receipt"></i> Sales
+                    </a></li>
+                    <li><a href="{% url 'inventory:product_list' %}" class="{% if request.resolver_match.app_name == 'inventory' and request.resolver_match.url_name in 'product_list product_detail product_add' %}active{% endif %}">
+                        <i class="fas fa-box"></i> Products
+                    </a></li>
+                    <li><a href="{% url 'customers:customer_list' %}" class="{% if request.resolver_match.app_name == 'customers' and request.resolver_match.url_name in 'customer_list customer_detail customer_create' %}active{% endif %}">
+                        <i class="fas fa-users"></i> Customers
+                    </a></li>
+                    <li><a href="{% url 'reports:report_list' %}" class="{% if request.resolver_match.app_name == 'reports' %}active{% endif %}">
+                        <i class="fas fa-chart-bar"></i> Reports
+                    </a></li>
+                    <li class="mt-4"><a href="#">
+                        <i class="fas fa-cog"></i> Settings
+                    </a></li>
+                    <li><a href="#">
+                        <i class="fas fa-question-circle"></i> Help & Support
+                    </a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4>Reports</h4>
+            </div>
+
+            <div class="row g-4">
+                <!-- Sales Report Card -->
+                <div class="col-xl-4 col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="card-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h5 class="card-title">Sales Report</h5>
+                            <p class="card-text">Generate detailed sales reports by date range</p>
+                            <a href="{% url 'reports:sales_report' %}" class="btn btn-outline-light">
+                                View Report <i class="fas fa-arrow-right ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inventory Report Card -->
+                <div class="col-xl-4 col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="card-icon">
+                                <i class="fas fa-boxes"></i>
+                            </div>
+                            <h5 class="card-title">Inventory Report</h5>
+                            <p class="card-text">View current inventory status and stock levels</p>
+                            <a href="{% url 'reports:inventory_report' %}" class="btn btn-outline-light">
+                                View Report <i class="fas fa-arrow-right ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Purchases Report Card -->
+                <div class="col-xl-4 col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="card-icon">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <h5 class="card-title">Purchases Report</h5>
+                            <p class="card-text">Track purchase orders and supplier information</p>
+                            <a href="{% url 'reports:purchases_report' %}" class="btn btn-outline-light">
+                                View Report <i class="fas fa-arrow-right ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
-
-    <div class="row">
-        <!-- Sales Report Card -->
-        <div class="col-xl-4 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Sales Report</div>
-                            <p class="text-muted small">Generate detailed sales reports by date range</p>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                    <a href="{% url 'reports:sales_report' %}" class="stretched-link"></a>
-                </div>
-            </div>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container text-center">
+            <p class="mb-0">
+                &copy; {% now "Y" %} Mini Inventory System. All rights reserved.
+            </p>
         </div>
-
-        <!-- Inventory Report Card -->
-        <div class="col-xl-4 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Inventory Report</div>
-                            <p class="text-muted small">View current inventory status and stock levels</p>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-boxes fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                    <a href="{% url 'reports:inventory_report' %}" class="stretched-link"></a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Purchases Report Card -->
-        <div class="col-xl-4 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Purchases Report</div>
-                            <p class="text-muted small">Track purchase orders and supplier information</p>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                    <a href="{% url 'reports:purchases_report' %}" class="stretched-link"></a>
-                </div>
-            </div>
-        </div>
-    </div>
+    </footer>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
 {% endblock %}

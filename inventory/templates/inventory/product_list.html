@@ -1,42 +1,225 @@
-{% extends 'inventory/base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 
-{% block page_title %}Products{% endblock %}
+{% block title %}Products - Mini Inventory{% endblock %}
 
-{% block breadcrumb_items %}
-<li class="breadcrumb-item active" aria-current="page">Products</li>
+{% block extra_css %}
+{{ block.super }}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body {
+    background: linear-gradient(135deg, #20105a 0%, #2a266d 100%) !important;
+    font-family: 'Inter', sans-serif;
+    color: #fff;
+}
+.page-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #20105a 0%, #2a266d 100%) !important;
+}
+
+.dashboard-wrapper {
+    display: flex;
+    flex: 1;
+    width: 100%;
+}
+
+.footer {
+    margin-top: auto;
+    background: #20105a;
+    color: #fff;
+    padding: 1rem 0;
+}
+.sidebar {
+    width: 260px;
+    background: linear-gradient(135deg, #2a266d 60%, #20105a 100%);
+    padding: 2rem 1.5rem 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    border-radius: 20px 0 0 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+.sidebar .logo {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 2.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    color: #fff;
+}
+.sidebar .logo i {
+    color: #ffd700;
+    font-size: 2rem;
+}
+.sidebar .menu {
+    flex: 1;
+}
+.sidebar .menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.sidebar .menu li {
+    margin-bottom: 1.2rem;
+}
+.sidebar .menu a {
+    color: #b2b6d9;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    border-radius: 6px;
+    padding: 0.55rem 1rem;
+    transition: background 0.2s, color 0.2s;
+}
+.sidebar .menu a.active, .sidebar .menu a:hover {
+    background: rgba(255,255,255,0.07);
+    color: #fff;
+}
+.sidebar .menu a i {
+    width: 20px;
+    text-align: center;
+}
+
+.main-content {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.card {
+    background: linear-gradient(120deg, #2a266d 60%, #4b33a8 100%);
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 24px rgba(75,51,168,0.13);
+    color: #fff;
+    margin-bottom: 1.5rem;
+}
+
+.table {
+    width: 100%;
+    color: #fff;
+    border-radius: 10px;
+    background: transparent;
+    font-size: 1.02rem;
+    margin-top: 0.7rem;
+    margin-bottom: 0.5rem;
+}
+
+.table th, .table td {
+    border: none;
+    padding: 0.7rem 0.5rem;
+}
+
+.table thead th {
+    color: #ffd700;
+    font-weight: 600;
+    background: none;
+}
+
+.table tbody tr {
+    border-radius: 10px;
+    background: rgba(255,255,255,0.03);
+    margin-bottom: 0.3rem;
+}
+
+.btn-outline-primary {
+    color: #ffd700;
+    border-color: #ffd700;
+}
+
+.btn-outline-primary:hover {
+    background-color: #ffd700;
+    color: #2a266d;
+}
+
+.dropdown-menu {
+    background: #2a266d;
+    border: 1px solid #3d348b;
+}
+
+.dropdown-item {
+    color: #fff;
+}
+
+.dropdown-item:hover {
+    background: #3d348b;
+    color: #fff;
+}
+
+.form-control, .form-select {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #fff;
+}
+
+.form-control:focus, .form-select:focus {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    border-color: #ffd700;
+    box-shadow: 0 0 0 0.25rem rgba(255, 215, 0, 0.25);
+}
+</style>
 {% endblock %}
 
-{% block page_actions %}
-<div class="btn-group">
-    <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-        <i class="fas fa-plus me-1"></i> Add Product
-    </button>
-    <ul class="dropdown-menu dropdown-menu-end">
-        <li>
-            <a class="dropdown-item" href="{% url 'inventory:product_add' %}">
-                <i class="fas fa-box me-2"></i>Single Product
-            </a>
-        </li>
-        <li><hr class="dropdown-divider"></li>
-        <li>
-            <a class="dropdown-item" href="{% url 'inventory:import_products' %}">
-                <i class="fas fa-file-import me-2"></i>Import from File
-            </a>
-        </li>
-    </ul>
-</div>
-{% endblock %}
-
-{% block page_content %}
-<div>
-    <div d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0">Filter Products</h5>
-        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" 
-                data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
-            <i class="fas fa-sliders-h me-1"></i> Filters
-        </button>
+{% block content %}
+<div class="page-wrapper">
+  <div class="dashboard-wrapper">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <i class="fas fa-crown"></i>
+      SMART POS
     </div>
+    <nav class="menu">
+      <ul>
+        <li><a href="{% url 'frontend:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"><i class="fas fa-th-large"></i> Dashboard</a></li>
+        <li><a href="{% url 'pos:sale_list' %}" class="{% if request.resolver_match.app_name == 'pos' and request.resolver_match.url_name in 'sale_list sale_detail sale_create' %}active{% endif %}"><i class="fas fa-receipt"></i> Sales</a></li>
+        <li><a href="{% url 'inventory:product_list' %}" class="{% if request.resolver_match.app_name == 'inventory' and request.resolver_match.url_name in 'product_list product_detail product_add' %}active{% endif %}"><i class="fas fa-box"></i> Products</a></li>
+        <li><a href="{% url 'customers:customer_list' %}" class="{% if request.resolver_match.app_name == 'customers' %}active{% endif %}"><i class="fas fa-users"></i> Customers</a></li>
+        <li><a href="{% url 'reports:report_list' %}" class="{% if request.resolver_match.app_name == 'reports' %}active{% endif %}"><i class="fas fa-chart-bar"></i> Reports</a></li>
+        <li><a href="{% url 'frontend:logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        <li><a href="#"><i class="fas fa-layer-group"></i> Data Classification</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4>Products</h4>
+        <div class="btn-group">
+            <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-plus me-1"></i> Add Product
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <a class="dropdown-item" href="{% url 'inventory:product_add' %}">
+                        <i class="fas fa-box me-2"></i>Single Product
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <a class="dropdown-item" href="{% url 'inventory:import_products' %}">
+                        <i class="fas fa-file-import me-2"></i>Import from File
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0">Filter Products</h5>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" 
+                        data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+                    <i class="fas fa-sliders-h me-1"></i> Filters
+                </button>
+            </div>
     <div class="collapse {% if filter_form.has_changed %}show{% endif %}" id="filterCollapse">
         <div>
             <form method="get" class="row g-3">
@@ -184,80 +367,54 @@
                                 {% if product.image %}
                                 <img src="{{ product.image.url }}" alt="{{ product.name }}" 
                                      class="me-2 rounded" style="width: 36px; height: 36px; object-fit: cover;">
-                                   aria-label="Previous">
-                                    <span aria-hidden="true">&laquo;</span>
-                                </a>
-                            </li>
-                            {% else %}
-                            <li class="page-item disabled">
-                                <span class="page-link">&laquo;</span>
-                            </li>
-                            {% endif %}
-                            
-                            {% for i in page_obj.paginator.page_range %}
-                                {% if page_obj.number == i %}
-                                <li class="page-item active">
-                                    <span class="page-link">{{ i }}</span>
-                                </li>
-                                {% else %}
-                                    {% if i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
-                                            {{ i }}
-                                        </a>
-                                    </li>
-                                    {% elif i == 1 or i == page_obj.paginator.num_pages %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
-                                            {{ i }}
-                                        </a>
-                                    </li>
-                                    {% elif i == page_obj.number|add:'-4' or i == page_obj.number|add:'4' %}
-                                    <li class="page-item disabled">
-                                        <span class="page-link">...</span>
-                                    </li>
-                                    {% endif %}
                                 {% endif %}
-                            {% endfor %}
-                            
-                            {% if page_obj.has_next %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
-                                   aria-label="Next">
-                                    <span aria-hidden="true">&raquo;</span>
+                            </div>
+                        </td>
+                        <td>{{ product.name }}</td>
+                        <td>{{ product.sku }}</td>
+                        <td>{{ product.category.name|default:"-" }}</td>
+                        <td class="text-end">${{ product.price|floatformat:2 }}</td>
+                        <td class="text-end">${{ product.total_value|floatformat:2 }}</td>
+                        <td class="text-center">
+                            <span class="badge {% if product.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                {{ product.is_active|yesno:"Active,Inactive" }}
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group">
+                                <a href="{% url 'inventory:product_edit' product.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
                                 </a>
-                            </li>
-                            {% else %}
-                            <li class="page-item disabled">
-                                <span class="page-link">&raquo;</span>
-                            </li>
-                            {% endif %}
-                        </ul>
-                    </nav>
-                </div>
-            {% empty %}
-            <tr>
-                <td colspan="9">
-                    <div class="text-center py-5">
-                        <div class="mb-3">
-                            <i class="fas fa-box-open fa-4x text-muted"></i>
-                        </div>
-                        <h5 class="text-muted">No products found</h5>
-                        <p class="text-muted">
-                            {% if request.GET %}
-                            No products match your search criteria.
-                            {% else %}
-                            Get started by adding your first product.
-                            {% endif %}
-                        </p>
-                        <a href="{% url 'inventory:product_add' %}" class="btn btn-primary mt-3">
-                            <i class="fas fa-plus me-1"></i> Add Product
-                        </a>
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
-            </div>
+                                <a href="{% url 'inventory:product_delete' product.id %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9">
+                            <div class="text-center py-5">
+                                <div class="mb-3">
+                                    <i class="fas fa-box-open fa-4x text-muted"></i>
+                                </div>
+                                <h5 class="text-muted">No products found</h5>
+                                <p class="text-muted">
+                                    {% if request.GET %}
+                                    No products match your search criteria.
+                                    {% else %}
+                                    Get started by adding your first product.
+                                    {% endif %}
+                                </p>
+                                <a href="{% url 'inventory:product_add' %}" class="btn btn-primary mt-3">
+                                    <i class="fas fa-plus me-1"></i> Add Product
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -265,52 +422,42 @@
 <!-- Bulk Actions Modal -->
 <div class="modal fade" id="bulkActionsModal" tabindex="-1" aria-labelledby="bulkActionsModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content" style="background: #2a266d; color: #fff;">
             <div class="modal-header">
                 <h5 class="modal-title" id="bulkActionsModalLabel">Bulk Actions</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="bulkActionForm" method="post" action="{% url 'inventory:product_bulk_action' %}">
+                <form id="bulkActionForm" method="post">
                     {% csrf_token %}
-                    <input type="hidden" name="product_ids" id="selectedProductIds">
+                    <input type="hidden" name="action" id="bulkActionInput">
+                    <input type="hidden" name="selected_products" id="selectedProductsInput">
                     
                     <div class="mb-3">
-                        <label for="bulkAction" class="form-label">Action</label>
-                        <select class="form-select" id="bulkAction" name="action" required>
+                        <label for="bulkActionSelect" class="form-label">Select Action</label>
+                        <select class="form-select" id="bulkActionSelect" name="bulk_action" required>
                             <option value="">Select an action...</option>
-                            <option value="activate">Activate Selected</option>
-                            <option value="deactivate">Deactivate Selected</option>
                             <option value="add_to_category">Add to Category</option>
                             <option value="remove_from_category">Remove from Category</option>
                             <option value="delete">Delete Selected</option>
                         </select>
                     </div>
                     
-                    <div class="mb-3 d-none" id="categoryField">
-                        <label for="bulkCategory" class="form-label">Category</label>
-                        <select class="form-select" id="bulkCategory" name="category">
+                    <div id="categoryField" class="mb-3" style="display: none;">
+                        <label for="categorySelect" class="form-label">Select Category</label>
+                        <select class="form-select" id="categorySelect" name="category">
                             <option value="">Select a category...</option>
-                            {% for cat in categories %}
-                            <option value="{{ cat.id }}">{{ cat.name }}</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     
-                    <div class="alert alert-warning d-none" id="deleteWarning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        This will permanently delete the selected products. This action cannot be undone.
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Apply</button>
                     </div>
                 </form>
-                
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    <span id="selectedCount">0</span> product(s) selected
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="applyBulkAction">Apply</button>
             </div>
         </div>
     </div>
@@ -319,113 +466,159 @@
 <!-- Import Modal -->
 <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content" style="background: #2a266d; color: #fff;">
             <div class="modal-header">
                 <h5 class="modal-title" id="importModalLabel">Import Products</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    Download our <a href="{% static 'inventory/templates/product_import_template.xlsx' %}">import template</a> 
-                    to ensure your data is formatted correctly.
-                </div>
-                
-                <form method="post" enctype="multipart/form-data" id="importForm">
+                <form method="post" enctype="multipart/form-data" action="{% url 'inventory:import_products' %}">
                     {% csrf_token %}
                     <div class="mb-3">
-                        <label for="importFile" class="form-label">Select file to import</label>
-                        <input class="form-control" type="file" id="importFile" name="file" accept=".xlsx,.xls,.csv" required>
+                        <label for="fileInput" class="form-label">Select Excel or CSV File</label>
+                        <input class="form-control" type="file" id="fileInput" name="file" accept=".xlsx, .xls, .csv" required>
                         <div class="form-text">
-                            Supported formats: .xlsx, .xls, .csv (Max size: 5MB)
+                            <a href="{% static 'sample_products_import.xlsx' %}" download class="text-decoration-none" style="color: #ffd700;">
+                                <i class="fas fa-download me-1"></i>Download sample import file
+                            </a>
                         </div>
                     </div>
-                    
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" id="updateExisting" name="update_existing">
                         <label class="form-check-label" for="updateExisting">
-                            Update existing products (matching by SKU or Barcode)
+                            Update existing products with matching SKU
                         </label>
                     </div>
-                    
-                    <div class="progress d-none" id="importProgress">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
-                             style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Import</button>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="startImport">
-                    <i class="fas fa-upload me-1"></i> Import
-                </button>
-            </div>
         </div>
     </div>
+</div>
+
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+               aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">&laquo;</span>
+        </li>
+        {% endif %}
+        
+        {% for i in page_obj.paginator.page_range %}
+            {% if page_obj.number == i %}
+            <li class="page-item active">
+                <span class="page-link">{{ i }}</span>
+            </li>
+            {% else %}
+                {% if i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        {{ i }}
+                    </a>
+                </li>
+                {% elif i == 1 or i == page_obj.paginator.num_pages %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                        {{ i }}
+                    </a>
+                </li>
+                {% elif i == page_obj.number|add:'-4' or i == page_obj.number|add:'4' %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+               aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">&raquo;</span>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+
+  </div>
+  <!-- Footer -->
+  <footer class="footer mt-auto py-3" style="background: #20105a; color: #fff;">
+    <div class="container text-center">
+      <p class="mb-0">
+        &copy; {% now "Y" %} Mini Inventory System. All rights reserved.
+      </p>
+    </div>
+  </footer>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 {{ block.super }}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Select all checkbox
-    const selectAllCheckbox = document.getElementById('selectAll');
-    const productCheckboxes = document.querySelectorAll('.product-checkbox');
-    const selectedProductIds = document.getElementById('selectedProductIds');
-    const selectedCount = document.getElementById('selectedCount');
-    const bulkActionForm = document.getElementById('bulkActionForm');
-    const bulkActionSelect = document.getElementById('bulkAction');
-    const categoryField = document.getElementById('categoryField');
-    const deleteWarning = document.getElementById('deleteWarning');
-    const applyBulkActionBtn = document.getElementById('applyBulkAction');
-    const importForm = document.getElementById('importForm');
-    const importProgress = document.getElementById('importProgress');
-    const startImportBtn = document.getElementById('startImport');
+// Update the hidden input with selected product IDs
+function updateSelectedProducts() {
+    const checkboxes = document.querySelectorAll('.product-checkbox:checked');
+    const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+    document.getElementById('selectedProductsInput').value = selectedIds.join(',');
     
-    // Toggle select all checkboxes
-    if (selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('change', function() {
-            productCheckboxes.forEach(checkbox => {
-                checkbox.checked = selectAllCheckbox.checked;
-            });
-            updateSelectedProducts();
-        });
+    // Enable/disable bulk action button
+    const bulkActionBtn = document.getElementById('bulkActionBtn');
+    if (bulkActionBtn) {
+        bulkActionBtn.disabled = selectedIds.length === 0;
     }
-    
-    // Update selected products when individual checkboxes change
-    productCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', updateSelectedProducts);
-    });
-    
-    // Update the hidden input with selected product IDs
-    function updateSelectedProducts() {
-        const selectedProducts = Array.from(document.querySelectorAll('.product-checkbox:checked'))
-            .map(checkbox => checkbox.value);
-        
-        selectedProductIds.value = selectedProducts.join(',');
-        selectedCount.textContent = selectedProducts.length;
-        
-        // Enable/disable bulk action button based on selection
-        if (applyBulkActionBtn) {
-            applyBulkActionBtn.disabled = selectedProducts.length === 0;
+}
+
+// Show/hide category field based on bulk action
+const bulkActionSelect = document.getElementById('bulkActionSelect');
+if (bulkActionSelect) {
+    bulkActionSelect.addEventListener('change', function() {
+        const showCategory = this.value === 'add_to_category' || this.value === 'remove_from_category';
+        document.getElementById('categoryField').style.display = showCategory ? 'block' : 'none';
+        if (showCategory) {
+            document.getElementById('categorySelect').setAttribute('required', 'required');
+        } else {
+            document.getElementById('categorySelect').removeAttribute('required');
         }
-    }
-    
-    // Show/hide category field based on bulk action
-    if (bulkActionSelect) {
-        bulkActionSelect.addEventListener('change', function() {
-            const showCategory = this.value === 'add_to_category' || this.value === 'remove_from_category';
-            categoryField.classList.toggle('d-none', !showCategory);
-            deleteWarning.classList.toggle('d-none', this.value !== 'delete');
-            
-            // Toggle danger state for delete action
-            if (this.value === 'delete') {
-                applyBulkActionBtn.classList.remove('btn-primary');
-                applyBulkActionBtn.classList.add('btn-danger');
-            } else {
-                applyBulkActionBtn.classList.remove('btn-danger');
-                applyBulkActionBtn.classList.add('btn-primary');
+    });
+}
+
+// Initialize DataTable
+$(document).ready(function() {
+    const table = $('#productsTable').DataTable({
+        columnDefs: [
+            { orderable: false, targets: [0] }, // Disable sorting on checkbox column
+            { searchable: false, targets: [0, 5, 6] } // Disable search on action columns
+        ],
+        order: [[1, 'asc']], // Default sort by name
+        pageLength: 25,
+        language: {
+            search: "_INPUT_",
+            searchPlaceholder: "Search products...",
+            lengthMenu: "Show _MENU_ products per page",
+            zeroRecords: "No products found",
+            info: "Showing _START_ to _END_ of _TOTAL_ products",
+            infoEmpty: "No products available",
+            infoFiltered: "(filtered from _MAX_ total products)",
+            paginate: {
+                next: '<i class="fas fa-chevron-right"></i>',
+                previous: '<i class="fas fa-chevron-left"></i>',
+                first: '<i class="fas fa-step-backward"></i>',
+                last: '<i class="fas fa-step-forward"></i>'
             }
         });
     }

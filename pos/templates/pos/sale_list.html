@@ -4,7 +4,71 @@
 {% block title %}Sales List - Mini Inventory{% endblock %}
 
 {% block extra_css %}
+{{ block.super }}
 <style>
+body {
+    background: linear-gradient(135deg, #20105a 0%, #2a266d 100%) !important;
+    font-family: 'Inter', sans-serif;
+    color: #fff;
+}
+.dashboard-wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+.sidebar {
+    width: 260px;
+    background: linear-gradient(135deg, #2a266d 60%, #20105a 100%);
+    padding: 2rem 1.5rem 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    border-radius: 20px 0 0 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+.sidebar .logo {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 2.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+.sidebar .logo i {
+    color: #ffd700;
+    font-size: 2rem;
+}
+.sidebar .menu {
+    flex: 1;
+    margin-bottom: 2rem;
+}
+.sidebar .menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.sidebar .menu li {
+    margin-bottom: 0.5rem;
+}
+.sidebar .menu a {
+    color: rgba(255,255,255,0.7);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.7rem 1rem;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+.sidebar .menu a.active, .sidebar .menu a:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+}
+
+.main-content {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
 .card-dark {
     background: linear-gradient(120deg, #2a266d 60%, #4b33a8 100%);
     border-radius: 20px;
@@ -45,7 +109,27 @@
 {% endblock %}
 
 {% block content %}
+<div class="dashboard-wrapper">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <i class="fas fa-crown"></i>
+      SMART POS
+    </div>
+    <nav class="menu">
+      <ul>
+        <li><a href="{% url 'frontend:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"><i class="fas fa-th-large"></i> Dashboard</a></li>
+        <li><a href="{% url 'pos:sale_list' %}" class="{% if request.resolver_match.app_name == 'pos' and request.resolver_match.url_name in 'sale_list sale_detail sale_create' %}active{% endif %}"><i class="fas fa-receipt"></i> Sales</a></li>
+        <li><a href="{% url 'inventory:product_list' %}" class="{% if request.resolver_match.app_name == 'inventory' and request.resolver_match.url_name in 'product_list product_detail product_add' %}active{% endif %}"><i class="fas fa-box"></i> Products</a></li>
+        <li><a href="{% url 'customers:customer_list' %}" class="{% if request.resolver_match.app_name == 'customers' %}active{% endif %}"><i class="fas fa-users"></i> Customers</a></li>
+        <li><a href="{% url 'reports:report_list' %}" class="{% if request.resolver_match.app_name == 'reports' %}active{% endif %}"><i class="fas fa-chart-bar"></i> Reports</a></li>
+        <li><a href="{% url 'frontend:logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        <li><a href="#"><i class="fas fa-layer-group"></i> Data Classification</a></li>
+      </ul>
+    </nav>
+  </aside>
 
+  <main class="main-content">
     <h4>Sales List</h4>
     <table class="table-dark">
       <thead>
@@ -77,4 +161,6 @@
         {% endfor %}
       </tbody>
     </table>
-  {% endblock %}
+  </main>
+</div>
+{% endblock %}
